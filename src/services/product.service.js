@@ -3,6 +3,7 @@ const { NotFoundError } = require("../core/error.response");
 const { paginate } = require("../helpers/paginate");
 const Product = require("../models/product.model");
 const Shop = require("../models/shop.model");
+const User = require("../models/user.model");
 const Sku = require("../models/sku.model");
 const {
   insertInventory,
@@ -16,6 +17,7 @@ const {
   getProductById,
 } = require("../models/repo/product.repo");
 const { filter } = require("lodash");
+const { getDetailUser } = require("../models/repo/user.repo");
 /**
  * createProduct
  * getAllProduct
@@ -26,6 +28,7 @@ const { filter } = require("lodash");
  * block product [admin]
  * delete product [admin | shop]
  * update product [admin | shop]
+ * add to wishList
  */
 
 // create product
@@ -164,59 +167,40 @@ const updateProductService = async ({
   });
   if (!foundProduct) throw new NotFoundError("Không tìm thấy sản phẩm");
   // update product
-  foundProduct.product_name = product_name;
-  foundProduct.product_thumb = product_thumb;
-  foundProduct.product_description = product_description;
-  foundProduct.product_price = product_price;
-  foundProduct.product_category = product_category;
-  foundProduct.product_quantity = product_quantity;
-  foundProduct.product_attributes = product_attributes;
-  foundProduct.product_ratingAvg = product_ratingAvg;
-  foundProduct.product_variations = product_variations;
-  const filter = {
-    product_id: foundProduct.product_id,
-  };
-  // sku_list.map(async (sku) => {
-  //   return await Sku.updateOne(
-  //     filter,
-  //     {
-  //       $set: {
-  //         sku_id: sku.sku_id,
-  //         sku_default: sku.sku_default,
-  //         sku_price: sku.sku_price,
-  //         sku_stock: sku.sku_stock,
-  //         product_id: product_id,
-  //       },
-  //     },
-  //     {
-  //       upsert: true,
-  //       new: true,
-  //     }
-  //   );
-  // });
-  // await updateSkuService({
-  //   product_id: product_id,
-  //   sku_list,
-  // });
-  // await 
-  const total_stock = sku_list.reduce(
-    (total, sku) => (total += sku.sku_stock),
-    0
+  
+};
+// add to wishlist
+
+const addToWishListService = async ({ userId, product_id }) => {
+  const user = await getDetailUser(userId);
+  const alreadyAdd = await user.usr_wishList.find(
+    (id) => id.toString() === product_id
   );
-  foundProduct.product_quantity = total_stock;
-  await updateInventory({
-    productId: foundProduct._id,
-    shopId: foundProduct.product_shop,
-    location: "",
-    stock: foundProduct.product_quantity,
-  });
-  return await Product.findByIdAndUpdate(
-    { _id: product_id, product_shop: product_shop },
-    foundProduct,
-    {
-      new: true,
-    }
-  );
+  let userAdd;
+  if (alreadyAdd) {
+    userAdd = await User.findByIdAndUpdate(
+      userId,
+      {
+        $pull: {
+          usr_wishList: product_id,
+        },
+      },
+      {
+        new: true,
+      }
+    );
+  } else {
+    userAdd = await User.findByIdAndUpdate(
+      _id,
+      {
+        $push: { wishlist: product_id },
+      },
+      {
+        new: true,
+      }
+    );
+  }
+  return userAdd;
 };
 
 // QUERY
@@ -273,6 +257,46 @@ const getAllDraftProductsService = async ({
     sort,
   });
 };
+// get list product for shop
+const getListProductByShopService = async ({ product_shop }) => {
+  console.log("Paramms::");
+  const foundProducts = await paginate({
+    model: Product,
+    filter: { product_shop },
+    limit: 50,
+    page: 1,
+    sort: "ctime",
+    select: [
+      "product_name",
+      "product_thumb",
+      "product_price",
+      "product_ratingAvg",
+    ],
+  });
+  return foundProducts;
+};
+// get detail product
+const getDetailProductService = async ({ product_id }) => {
+  const foundProduct = await getProductById({
+    productId: product_id,
+  });
+  if (!foundProduct) throw new NotFoundError("Không tìm thấy sản phẩm");
+  return foundProduct;
+};
+// search
+const searchProductService = async ( {q} ) => {
+  const searchReg = new RegExp(q, "i");
+  console.log("q::", q);
+  const result = await paginate({
+    model: Product,
+    filter: {
+      $text: { $search: searchReg },
+      isPublished: true,
+    },
+    sort: { score: { $meta: "textScore" } },
+  });
+  return result;
+};
 // END QUERY
 module.exports = {
   createProductService,
@@ -284,4 +308,7 @@ module.exports = {
   getAllProductService,
   getAllPublishedProductsService,
   getAllDraftProductsService,
+  getListProductByShopService,
+  getDetailProductService,
+  searchProductService,
 };
