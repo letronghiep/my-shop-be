@@ -10,6 +10,9 @@ const {
   blockProductService,
   deleteProductService,
   updateProductService,
+  getDetailProductService,
+  getListProductByShopService,
+  searchProductService,
 } = require("../services/product.service");
 
 // user
@@ -20,6 +23,28 @@ const getAllProduct = async (req, res, next) => {
   }).send(res);
 };
 
+const getProductById = async (req, res, next) => {
+  new SuccessResponse({
+    message: "Detail product",
+    metadata: await getDetailProductService({
+      product_id: req.params.product_id,
+    }),
+  }).send(res);
+};
+
+const getListProductByShop = async (req, res, next) => {
+  console.log(req.params);
+  new SuccessResponse({
+    message: "List product by shop",
+    metadata: await getListProductByShopService(req.params),
+  }).send(res);
+};
+const searchProduct = async (req, res, next) => {
+  new SuccessResponse({
+    message: "Search product",
+    metadata: await searchProductService(req.query),
+  }).send(res);
+};
 const createProductByShop = async (req, res, next) => {
   const product = await createProductService({
     product_shop: req.user.userId,
@@ -166,4 +191,7 @@ module.exports = {
   getAllProduct,
   getAllPublishedProduct,
   getAllDraftProduct,
+  getListProductByShop,
+  getProductById,
+  searchProduct,
 };

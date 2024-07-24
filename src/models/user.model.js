@@ -60,6 +60,12 @@ var userSchema = new Schema(
       default: "pending",
       enum: ["pending", "active", "block"],
     },
+    usr_wishList: [
+      {
+        type: Types.ObjectId,
+        ref: "Product",
+      },
+    ],
   },
   {
     collection: COLLECTION_NAME,

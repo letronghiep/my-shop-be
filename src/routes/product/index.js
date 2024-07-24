@@ -16,6 +16,9 @@ const {
   blockProductByAdmin,
   deleteProductByShop,
   updateProductByShop,
+  getProductById,
+  getListProductByShop,
+  searchProduct,
 } = require("../../controllers/product.controller");
 const { authentication } = require("../../middlewares/authentication");
 const { grantAccess } = require("../../middlewares/rbac.middleware");
@@ -23,7 +26,9 @@ const router = express.Router();
 // user
 
 router.get("", asyncHandler(getAllProduct));
-
+router.get("/shop/:product_shop", asyncHandler(getListProductByShop));
+router.get("/search", asyncHandler(searchProduct));
+router.get("/:product_id", asyncHandler(getProductById));
 router.use(authentication);
 
 // shop
