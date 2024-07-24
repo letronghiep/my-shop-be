@@ -2,7 +2,6 @@
 const { getSelectData } = require("../../utils");
 const Product = require("../product.model");
 const getProductById = async ({ productId }) => {
-  console.log(productId);
   return await Product.findOne({
     _id: productId,
     isPublished: true,
