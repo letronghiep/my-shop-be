@@ -52,7 +52,7 @@ const addToCartService = async ({ userId, product }) => {
   console.log(userCart);
   // co gio hang nhung chua co san pham
   if (!userCart.cart_products.length) {
-    userCart.products = [product];
+    userCart.cart_products = [product];
     return await userCart.save();
   }
   // gio hang ton tai va co san pham thi update quantity\
@@ -80,7 +80,7 @@ const updateCartService = async ({ userId, shop_order_ids }) => {
     shop_order_ids[0]?.item_products[0];
   // check product
   console.log("id", productId);
-  const foundProduct = await getProductById({productId});
+  const foundProduct = await getProductById({ productId });
   if (!foundProduct) throw new NotFoundError("Product not found");
   if (foundProduct.product_shop.toString() !== shop_order_ids[0]?.shopId)
     throw new NotFoundError("Product does not exists");

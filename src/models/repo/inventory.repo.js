@@ -48,7 +48,7 @@ const reservationInventory = async ({ productId, quantity, cartId }) => {
         inven_reservations: {
           quantity,
           cartId,
-          createdAt: new Date(),
+          createOn: new Date(),
         },
       },
     },
