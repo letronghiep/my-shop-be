@@ -71,7 +71,7 @@ const checkoutReviewService = async ({
     } = shop_order_ids[i];
     // check product server
     const checkProductServer = await checkProductByServer(item_products);
-    console.log(item_products)
+    console.log(item_products);
     if (!checkProductServer[0]) throw new BadRequestError("order wrong!!!");
     // tong tien don hang
     const checkoutPrice = checkProductServer.reduce((acc, product) => {
@@ -161,7 +161,49 @@ const orderByUserService = async ({
   }
   return newOrder;
 };
+/*
+ Query order
+ */
+const getOrderByUserService = async ({ userId, limit = 20, skip = 0 }) => {
+  const query = {
+    order_userId: userId,
+  };
+  return await Order.find(query).skip(skip).limit(limit);
+};
+const getDetailOrderService = async ({ userId, orderId }) => {
+  return await Order.findOne({
+    order_userId: userId,
+    _id: orderId,
+  });
+};
+
+const cancelOrderService = async ({ orderId, userId }) => {
+  const query = {
+      order_userId: userId,
+      _id: orderId,
+    },
+    updateSet = {
+      order_status: "canceled",
+    };
+  const { modifiedCount } = await Order.updateOne(query, updateSet);
+  return modifiedCount;
+};
+const updateStatusOrderService = async ({ order_status, userId, orderId }) => {
+  const query = {
+      order_userId: userId,
+      _id: orderId,
+    },
+    updateSet = {
+      order_status: order_status,
+    };
+  const { modifiedCount } = await Order.updateOne(query, updateSet);
+  return modifiedCount;
+};
 module.exports = {
   checkoutReviewService,
   orderByUserService,
+  cancelOrderService,
+  updateStatusOrderService,
+  getOrderByUserService,
+  getDetailOrderService,
 };
