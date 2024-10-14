@@ -20,7 +20,6 @@ const pro = {
     password: process.env.DEV_DB_PASS,
   },
 };
-console.log("env::", process.env.NODE_ENV);
 const config = { dev, pro };
 const env = process.env.NODE_ENV || "dev";
 module.exports = config[env];

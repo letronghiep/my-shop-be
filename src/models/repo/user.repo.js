@@ -12,7 +12,6 @@ const getListUser = async ({ limit, sort, page, filter }) => {
     .lean();
 };
 const getDetailUser = async ({ user_id }) => {
-  console.log("userId::", user_id)
   const foundUser = await User.findOne({
     _id: user_id,
   });

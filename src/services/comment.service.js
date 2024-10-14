@@ -109,7 +109,6 @@ const getCommentByParentIdService = async ({
 };
 // delete comment
 const deleteCommentService = async ({ productId, commentId }) => {
-  console.log("comment::", productId);
   // check exists products
   const foundProduct = await getProductById({
     productId,

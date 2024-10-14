@@ -2,7 +2,6 @@
 const { CREATED, SuccessResponse } = require("../core/success.response");
 const { addToCartService, updateCartService, deleteUserCartService, getListUserCartService } = require("../services/cart.service");
 const addToCart = async (req, res, next) => {
-    console.log("req::", req.body)
   new CREATED({
     message: "cart created",
     metadata: await addToCartService({

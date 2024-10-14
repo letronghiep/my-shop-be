@@ -32,6 +32,10 @@ var categorySchema = new Schema(
       type: Types.ObjectId,
       ref: DOCUMENT_NAME,
     },
+    category_feature: {
+      type: Boolean,
+      default: false
+    },
     isDeleted: {
       type: Boolean,
       default: false,

@@ -33,7 +33,6 @@ const getProductById = async (req, res, next) => {
 };
 
 const getListProductByShop = async (req, res, next) => {
-  console.log(req.params);
   new SuccessResponse({
     message: "List product by shop",
     metadata: await getListProductByShopService(req.params),

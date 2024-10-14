@@ -12,7 +12,6 @@ const createAdmin = async () => {
       rol_name: "admin",
     });
     if (!foundRoleAdmin) throw new Error("Admin role not found");
-    console.log(foundRoleAdmin);
     const foundUser = await User.findOne({
       usr_name: "admin",
     });
@@ -34,7 +33,6 @@ const createAdmin = async () => {
       usr_status: "active",
     });
     // return adminUser;
-    console.log(adminUser)
   } catch (error) {
     console.log("có lỗi trong quá trình tạo::", error);
   }

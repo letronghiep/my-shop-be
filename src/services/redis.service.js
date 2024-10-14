@@ -19,7 +19,6 @@ const acquireLock = async (productId, quantity, cartId) => {
   for (let i = 0; i < retryTimes; i++) {
     // tao mot key, ai nam key duoc thanh toan
     const result = await setnxAsync(key, expireTime);
-    console.log(`result:::`, result)
     if (result === 1) {
 
       // thao tac voi inventory

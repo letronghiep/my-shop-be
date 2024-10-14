@@ -5,6 +5,7 @@ const {
   getListResource,
   getListRole,
   updateRoleService,
+  getRoleService,
 } = require("../services/rbac.service");
 const { CREATED, SuccessResponse } = require("../core/success.response");
 const newRole = async (req, res, next) => {
@@ -23,8 +24,17 @@ const listRole = async (req, res, next) => {
     }),
   }).send(res);
 };
+
+const getRole = async(req, res, next) => {
+  new SuccessResponse({
+    message: "Detail role",
+    metadata: await getRoleService({
+      id: req.params.id
+    }),
+  }).send(res);
+}
+ 
 const newResource = async (req, res, next) => {
-  console.log(req.body);
   new SuccessResponse({
     message: "Created resource",
     metadata: await createResource(req.body),
@@ -54,4 +64,6 @@ module.exports = {
   newResource,
   listResource,
   updateRole,
+  getRole,
+ 
 };

@@ -11,6 +11,10 @@ var skuSchema = new Schema(
       required: true,
       unique: true,
     },
+    sku_tier_idx: {
+      type: Array,
+      default: [],
+    },
     sku_default: {
       type: Boolean,
       default: false,
@@ -36,7 +40,8 @@ var skuSchema = new Schema(
       default: 0,
     },
     product_id: {
-      type: String,
+      type: Types.ObjectId,
+      ref: 'Product',
       required: true,
     },
     isDraft: {

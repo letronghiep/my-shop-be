@@ -6,6 +6,7 @@ const {
   getDetailUserService,
   updateUserService,
   updateUserToShopService,
+  getMeService,
 } = require("../services/user.service");
 const createUser = async (req, res, next) => {
   new CREATED({
@@ -20,7 +21,6 @@ const listUser = async (req, res, next) => {
   }).send(res);
 };
 const detailUser = async (req, res, next) => {
-  console.log(req.params);
   new SuccessResponse({
     message: "Detail User",
     metadata: await getDetailUserService(req.params.user_id),
@@ -28,7 +28,6 @@ const detailUser = async (req, res, next) => {
 };
 
 const updateUser = async (req, res, next) => {
-  console.log(req.body);
   new SuccessResponse({
     message: "Update User",
     metadata: await updateUserService({
@@ -43,10 +42,20 @@ const createShop = async (req, res, next) => {
     metadata: await updateUserToShopService(req.body),
   }).send(res);
 };
+const getMe = async (req, res, next) => {
+  new SuccessResponse({
+    message: "User Detail",
+    metadata: await getMeService({
+      userId: req.user.userId,
+      keyStore: req.keyStore
+    }),
+  }).send(res);
+};
 module.exports = {
   createUser,
   listUser,
   detailUser,
   updateUser,
-  createShop
+  createShop,
+  getMe,
 };
