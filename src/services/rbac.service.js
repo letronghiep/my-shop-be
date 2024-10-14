@@ -3,11 +3,10 @@ const Resource = require("../models/resource.model");
 const User = require("../models/user.model");
 const Role = require("../models/role.model");
 const { BadRequestError } = require("../core/error.response");
-
+const { Types } = require("mongoose");
 const createResource = async ({ src_name, src_slug, src_description }) => {
   // Create resource
   try {
-    console.log({ src_name, src_slug, src_description });
     // 1. check exists resource
     const foundResource = await Resource.findOne({ src_name });
     if (foundResource) throw new Error("Resource already exists");
@@ -54,7 +53,6 @@ const getListResource = async ({
     ]);
     return resources;
   } catch (error) {
-    console.log(error);
     return [];
   }
 };
@@ -133,6 +131,22 @@ const getListRole = async ({ userId, limit = 30, skip = 0, search = "" }) => {
     throw error;
   }
 };
+// get single role
+
+const getRoleService = async ({ id }) => {
+  try {
+    // check role exists
+    console.log(id)
+    const foundRole = await Role.findById({
+      _id: id,
+    }).lean();
+    if (!foundRole) throw new BadRequestError("Role không tồn tại");
+    // get role
+    return foundRole;
+  } catch (error) {
+    throw error;
+  }
+};
 // update role
 const updateRoleService = async ({
   rol_slug,
@@ -170,4 +184,5 @@ module.exports = {
   getListResource,
   getListRole,
   updateRoleService,
+  getRoleService,
 };

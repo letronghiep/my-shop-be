@@ -7,6 +7,7 @@ const { checkProductByServer } = require("../models/repo/product.repo");
 const { getDiscountAmount } = require("../controllers/discount.controller");
 const { acquireLock, releaseLock } = require("../services/redis.service");
 const { deleteUserCartService } = require("./cart.service");
+const { producer } = require("./rabbitMQ.service");
 /* 
     {
         cartId,
@@ -44,7 +45,7 @@ const { deleteUserCartService } = require("./cart.service");
     }
 
 */
-
+// const io = getIO();
 const checkoutReviewService = async ({
   cartId,
   userId,
@@ -71,7 +72,6 @@ const checkoutReviewService = async ({
     } = shop_order_ids[i];
     // check product server
     const checkProductServer = await checkProductByServer(item_products);
-    console.log(item_products);
     if (!checkProductServer[0]) throw new BadRequestError("order wrong!!!");
     // tong tien don hang
     const checkoutPrice = checkProductServer.reduce((acc, product) => {
@@ -131,7 +131,6 @@ const orderByUserService = async ({
   for (let i = 0; i < products.length; i++) {
     const { productId, quantity } = products[i];
     const keyLock = await acquireLock(productId, quantity, cartId);
-    console.log("key lock::", keyLock);
     acquireProduct.push(keyLock ? true : false);
     if (keyLock) {
       await releaseLock(keyLock);
@@ -158,6 +157,8 @@ const orderByUserService = async ({
         order.item_products.map((product) => product.productId)
       ),
     });
+    await producer(JSON.stringify(newOrder), "orderQueue");
+    // io.emit("order-requirement", newOrder);
   }
   return newOrder;
 };

@@ -24,7 +24,6 @@ const apiKey = async (req, res, next) => {
 };
 
 const permission = (permission) => {
-  console.log("permission::", permission);
   return (req, res, next) => {
     if (!req.objKey.permissions) {
       throw new ForbiddenError("Permission denied!");

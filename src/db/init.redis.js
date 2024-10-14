@@ -62,7 +62,6 @@ const initRedis = () => {
   // return instanceRedis
 };
 const getRedis = () => client;
-console.log(getRedis());
 const closeRedis = () => {};
 module.exports = {
   initRedis,

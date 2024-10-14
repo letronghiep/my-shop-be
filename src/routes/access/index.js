@@ -10,16 +10,16 @@ const {
 const {
   checkAdmin,
   authentication,
+  checkSeller,
 } = require("../../middlewares/authentication");
 const router = express.Router();
 router.post("/signup", asyncHandler(signUp));
 router.post("/login", asyncHandler(login));
 
 // router.use(checkAdmin);
-router.post("/admin-login", checkAdmin,  asyncHandler(login));
+router.post("/admin-login", checkAdmin, asyncHandler(login));
 // handle refreshTOken and logout
 router.use(authentication);
 router.post("/logout", asyncHandler(logout));
-router.post("/handle_refreshToken", asyncHandler(handleRefreshToken));
-
+router.post("/refreshToken", asyncHandler(handleRefreshToken));
 module.exports = router;

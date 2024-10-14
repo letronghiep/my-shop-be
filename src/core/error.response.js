@@ -73,4 +73,5 @@ module.exports = {
   NotFoundError,
   ForbiddenError,
   RedisErrorResponse,
+  ErrorResponse
 };

@@ -13,14 +13,12 @@ const createCategory = async (req, res, next) => {
   }).send(res);
 };
 const getCategoryByParentId = async (req, res, next) => {
-  console.log(req.query);
   new SuccessResponse({
     message: "List Category",
     metadata: await getCategoryByParentIdService(req.query),
   }).send(res);
 };
 const deleteCategory = async (req, res, next) => {
-  console.log(req.params);
   new SuccessResponse({
     message: "deleted Category",
     metadata: await deleteCategoryService({

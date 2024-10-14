@@ -7,19 +7,20 @@ const {
   BadRequestError,
   AuthFailureError,
   ForbiddenError,
+  NotFoundError,
 } = require("../core/error.response");
 const User = require("../models/user.model");
 const Role = require("../models/role.model");
+const Shop = require("../models/shop.model");
 const KeyStore = require("../models/keyToken.model");
 const generateKey = require("../helpers/generateKey");
 const { createKeyToken, removeKeyById } = require("./keyToken.service");
 const { getInfoData, randomUserId } = require("../utils");
-const { createTokenPair } = require("../auth/authUtil");
+const { createTokenPair, verifyJWT } = require("../auth/authUtil");
 
-const signUpService = async ({ usr_name, usr_password, usr_full_name }) => {
+const signUpService = async ({ usr_name, usr_password }) => {
   try {
     const holderUser = await User.findOne({ usr_name }).lean();
-    console.log(holderUser);
     if (holderUser) {
       throw new BadRequestError("Tên người dùng đã tồn tại");
     }
@@ -33,7 +34,7 @@ const signUpService = async ({ usr_name, usr_password, usr_full_name }) => {
       usr_id: randomUserId(),
       usr_name,
       usr_password: passwordHash,
-      usr_full_name,
+      usr_status: "pending",
       usr_role: role._id,
     });
     if (newUser) {
@@ -45,14 +46,14 @@ const signUpService = async ({ usr_name, usr_password, usr_full_name }) => {
       });
       if (!keyStore) throw new BadRequestError("Xảy ra lỗi khi tạo khóa");
       const tokens = await createTokenPair(
-        { userId: newUser._id, usr_full_name },
+        { userId: newUser._id, usr_name, role: role.rol_slug },
         publicKey,
         privateKey
       );
       return {
         tokens,
         user: getInfoData({
-          field: ["usr_id", "usr_name", "usr_full_name"],
+          field: ["usr_id", "usr_name"],
           object: newUser,
         }),
       };
@@ -69,22 +70,23 @@ const loginService = async ({ usr_name, usr_password }) => {
    * create accessToken and refreshToken
    */
   try {
-    console.log(usr_name);
     const foundUser = await User.findOne({
       usr_name,
       usr_status: "active",
-    }).lean();
-    if (!foundUser) throw new AuthFailureError("Tài khoản không tồn tại");
+    })
+      .populate("usr_role")
+      .lean();
+    if (!foundUser)
+      throw new AuthFailureError("Tài khoản hoặc mật khẩu không đúng");
     // check valid password
-    console.log("foundUser::", foundUser);
-    console.log("found::", foundUser.usr_password);
     const isMatch = await bcrypt.compare(usr_password, foundUser.usr_password);
     if (!isMatch) throw new AuthFailureError("Mật khẩu không đúng");
     // create token
     const { privateKey, publicKey } = generateKey();
-    const { _id: userId } = foundUser;
+    const { _id: userId, usr_role } = foundUser;
+    const role = usr_role.rol_slug;
     const tokens = await createTokenPair(
-      { userId, usr_name },
+      { userId, usr_name, role },
       publicKey,
       privateKey
     );
@@ -116,24 +118,22 @@ const logoutService = async (keyStore) => {
     throw error;
   }
 };
-const handleRefreshTokenService = async ({ keyStore, user }) => {
-  const refreshToken = req.cookies.refreshToken;
-  const { userId, usr_name } = user;
-  if (keyStore.refreshTokensUsed.includes(refreshToken))
+const handleRefreshTokenService = async ({ refreshToken, keyStore, user }) => {
+  const { userId, usr_name, role } = user;
+  if (keyStore.refreshTokenUsed.includes(refreshToken))
     throw new ForbiddenError("Có lỗi xảy ra. Vui lòng đăng nhập lại!");
   if (keyStore.refreshToken !== refreshToken)
     throw new AuthFailureError("Tài khoản chưa được đăng ký");
   const foundUser = User.findOne({
     usr_name: usr_name,
     usr_id: userId,
-  });
+  })
+    .populate("usr_role")
+    .lean();
   if (!foundUser) throw new AuthFailureError("Người dùng không tồn tại");
   // check tokens is used
-  const tokens = createTokenPair(
-    {
-      userId,
-      usr_name,
-    },
+  const tokens = await createTokenPair(
+    { userId, usr_name, role },
     keyStore.publicKey,
     keyStore.privateKey
   );
@@ -151,7 +151,6 @@ const handleRefreshTokenService = async ({ keyStore, user }) => {
     tokens,
   };
 };
-
 module.exports = {
   signUpService,
   loginService,

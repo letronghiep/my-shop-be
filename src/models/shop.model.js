@@ -2,7 +2,7 @@
 const DOCUMENT_NAME = "Shop";
 const COLLECTION_NAME = "shops";
 const { model, Schema, Types } = require("mongoose");
-
+const slugify = require('slugify')
 var shopSchema = new Schema(
   {
     usr_id: {
@@ -10,16 +10,26 @@ var shopSchema = new Schema(
       required: true,
       unique: true,
     },
-    shop_name: {
+    usr_full_name: {
+      // display name
+      type: String,
+      default: "",
+    },
+    usr_slug: {
+      type: String,
+      default: "",
+    },
+    usr_name: {
+      // login name
       type: String,
       unique: true,
       default: "",
     },
-    password: {
+    usr_password: {
       type: String,
       default: "",
     },
-    email: {
+    usr_email: {
       type: String,
       default: "",
     },
@@ -31,17 +41,25 @@ var shopSchema = new Schema(
       type: String,
       default: "",
     },
-    phone: {
+    usr_phone: {
       type: String,
       default: "",
     },
-    avatar: {
+    usr_sex: {
       type: String,
       default: "",
     },
-    role: {
+    usr_avatar: {
+      type: String,
+      default: "",
+    },
+    usr_role: {
       type: Types.ObjectId,
       ref: "Role",
+    },
+    usr_date_of_birth: {
+      type: Date,
+      default: null,
     },
     status: {
       type: String,
@@ -56,5 +74,9 @@ var shopSchema = new Schema(
 );
 
 shopSchema.index({ name: "text" });
+shopSchema.pre("save", function (next) {
+  this.usr_slug = slugify(this.usr_name, { lower: true });
 
+  next();
+});
 module.exports = model(DOCUMENT_NAME, shopSchema);

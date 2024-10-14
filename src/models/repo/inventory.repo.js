@@ -19,12 +19,12 @@ const updateInventory = async ({
   location = "unKnown",
   stock,
 }) => {
-  const inventory = new Inventory({
-    inven_productId: productId,
+  const inventory = {
     inven_shopId: shopId,
     inven_stock: stock,
     inven_location: location,
-  });
+  };
+  console.log("update inventory");
   return await Inventory.findOneAndUpdate(
     {
       inven_productId: productId,
@@ -32,10 +32,10 @@ const updateInventory = async ({
     },
     inventory,
     {
-      new: true,
       upsert: true,
     }
   );
+  
 };
 const reservationInventory = async ({ productId, quantity, cartId }) => {
   const query = {

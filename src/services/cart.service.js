@@ -41,7 +41,6 @@ const updateUserCartQuantity = async ({ userId, product }) => {
 // END REPO
 
 const addToCartService = async ({ userId, product }) => {
-  console.log("product::", product);
   const userCart = await Cart.findOne({
     cart_userId: userId,
   });
@@ -49,7 +48,6 @@ const addToCartService = async ({ userId, product }) => {
   if (!userCart) {
     return await createUserCart({ userId, product });
   }
-  console.log(userCart);
   // co gio hang nhung chua co san pham
   if (!userCart.cart_products.length) {
     userCart.cart_products = [product];
@@ -79,7 +77,6 @@ const updateCartService = async ({ userId, shop_order_ids }) => {
   const { productId, quantity, old_quantity } =
     shop_order_ids[0]?.item_products[0];
   // check product
-  console.log("id", productId);
   const foundProduct = await getProductById({ productId });
   if (!foundProduct) throw new NotFoundError("Product not found");
   if (foundProduct.product_shop.toString() !== shop_order_ids[0]?.shopId)

@@ -27,25 +27,45 @@ const createSkuService = async ({ product_id, sku_list }) => {
     return [];
   }
 };
+const findSkusByTierIdx = async (sku_list) => {
+  // Tạo danh sách `sku_tier_idx` để tìm kiếm
+  const skuTierIdxList = sku_list.map((sku) => sku.sku_tier_idx);
 
+  // Tìm tất cả SKU có `sku_tier_idx` trong danh sách
+  const foundSkus = await Sku.find({
+    sku_tier_idx: { $in: skuTierIdxList },
+  });
+
+  return foundSkus;
+};
 const updateSkuService = async ({ product_id, sku_list }) => {
   if (!sku_list.length) return;
+
+  if (!sku_list.length) return;
+
+  // Tìm tất cả SKU có `sku_tier_idx` trong danh sách
+  const existingSkus = await findSkusByTierIdx(sku_list);
+
   for (const sku of sku_list) {
-    await Sku.updateOne(
-      { product_id: sku.product_id },
-      {
-        $set: {
-          sku_id: `${product_id}.${randomProductId()}`,
-          sku_default: sku.sku_default,
-          sku_price: sku.sku_price,
-          sku_stock: sku.sku_stock,
-          product_id: product_id,
-        },
-      },
-      {
-        upsert: true,
-      }
+    const { sku_tier_idx, ...skuWithoutId } = sku;
+
+    // Tìm SKU đã tồn tại với `sku_tier_idx`
+    const existingSku = existingSkus.find(
+      (existing) => existing.sku_tier_idx.toString() === sku_tier_idx.toString()
     );
+
+    if (existingSku) {
+      // Nếu SKU đã tồn tại, cập nhật nó
+      await Sku.updateOne({ _id: existingSku._id }, { $set: skuWithoutId });
+    } else {
+      // Nếu SKU không tồn tại, tạo mới
+      await Sku.create({
+        ...skuWithoutId,
+        sku_tier_idx,
+        product_id: product_id,
+        sku_id: `${product_id}.${randomProductId()}`,
+      });
+    }
   }
 };
 

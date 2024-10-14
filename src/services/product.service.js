@@ -71,7 +71,7 @@ const createProductService = async ({
   if (product && sku_list.length) {
     createSkuService({
       sku_list,
-      product_id: product.product_id,
+      product_id: product._id,
     }).then();
     const total_stock = sku_list.reduce(
       (total, sku) => (total += sku.sku_stock),
@@ -91,9 +91,7 @@ const createProductService = async ({
 };
 
 // publishedProduct
-
 const publishedProductService = async ({ product_id, product_shop }) => {
-  console.log("result::", { product_id, product_shop });
   // check product exists
   const foundProduct = await foundProductByShop({ product_id, product_shop });
   if (!foundProduct) throw new NotFoundError("Sản phẩm không tồn tại");
@@ -158,7 +156,7 @@ const updateProductService = async ({
   product_attributes,
   product_ratingAvg,
   product_variations,
-  sku_list = [],
+  sku_list,
 }) => {
   // check exists product
   const foundProduct = await foundProductByShop({
@@ -166,8 +164,44 @@ const updateProductService = async ({
     product_shop,
   });
   if (!foundProduct) throw new NotFoundError("Không tìm thấy sản phẩm");
+  // update skus
+
+  const total_stock = sku_list.reduce(
+    (total, sku) => (total += sku.sku_stock),
+    0
+  );
   // update product
-  
+  const updateFields = {
+    product_name,
+    product_thumb,
+    product_description,
+    product_price,
+    product_category,
+    product_quantity: total_stock,
+    product_shop,
+    product_attributes,
+    product_ratingAvg,
+    product_variations,
+    sku_list,
+  };
+  await updateSkuService({ product_id: product_id, sku_list: sku_list });
+
+  // update product_quantity
+  const { modifiedCount } = await Product.updateOne(
+    { _id: product_id },
+    { $set: updateFields }, // use $set to update specific fields,
+    {
+      new: true,
+      upsert: true,
+    }
+  );
+  await updateInventory({
+    productId: product_id,
+    shopId: product_shop,
+    location: "",
+    stock: total_stock,
+  });
+  return modifiedCount;
 };
 // add to wishlist
 
@@ -259,7 +293,6 @@ const getAllDraftProductsService = async ({
 };
 // get list product for shop
 const getListProductByShopService = async ({ product_shop }) => {
-  console.log("Paramms::");
   const foundProducts = await paginate({
     model: Product,
     filter: { product_shop },
@@ -284,9 +317,8 @@ const getDetailProductService = async ({ product_id }) => {
   return foundProduct;
 };
 // search
-const searchProductService = async ( {q} ) => {
+const searchProductService = async ({ q }) => {
   const searchReg = new RegExp(q, "i");
-  console.log("q::", q);
   const result = await paginate({
     model: Product,
     filter: {

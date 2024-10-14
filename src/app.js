@@ -3,9 +3,17 @@ const express = require("express");
 const { default: helmet } = require("helmet");
 const compression = require("compression");
 const morgan = require("morgan");
+const cors = require('cors');
 const cookieParser = require("cookie-parser");
 const app = express();
+const credentials = require("./middlewares/credentials");
 
+// cors
+const corsOptions = {
+  origin: true,
+};
+app.use(credentials)
+app.use(cors(corsOptions));
 // init middlewares
 
 app.use(morgan("dev"));
@@ -21,7 +29,7 @@ app.use(
 // init db
 require("./db/init.mongodb");
 // redis
-const initRedis = require('./db/init.redis')
+const initRedis = require('./db/init.redis');
 initRedis.initRedis()
 // const { checkOverload } = require('./helpers/check.connect')
 // checkOverload()

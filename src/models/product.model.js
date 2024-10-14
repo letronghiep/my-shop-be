@@ -10,6 +10,7 @@ var productSchema = new Schema(
     product_id: {
       type: String,
       default: "",
+      unique: true,
     },
     product_name: {
       type: String,

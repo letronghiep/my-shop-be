@@ -2,13 +2,21 @@
 
 const bcrypt = require("bcrypt");
 
-const { AuthFailureError, NotFoundError } = require("../core/error.response");
+const {
+  AuthFailureError,
+  NotFoundError,
+  ErrorResponse,
+} = require("../core/error.response");
 const { getListUser, getDetailUser } = require("../models/repo/user.repo");
 const User = require("../models/user.model");
 const Role = require("../models/role.model");
 const Shop = require("../models/shop.model");
 const { randomUserId } = require("../utils");
 const { default: slugify } = require("slugify");
+const { Types } = require("mongoose");
+const generateKey = require("../helpers/generateKey");
+const { createTokenPair } = require("../auth/authUtil");
+const { createKeyToken } = require("./keyToken.service");
 /**
  * create user [admin]
  * get list user [admin]
@@ -164,15 +172,16 @@ const updateUserToShopService = async ({
       const newShop = await Shop.create({
         _id: foundUser._id,
         usr_id: foundUser.usr_id,
-        shop_name: foundUser.usr_name,
-        password: foundUser.usr_password,
-        email: foundUser.usr_email,
+        usr_name: foundUser.usr_name,
+        usr_password: foundUser.usr_password,
+        usr_email: foundUser.usr_email,
         received_address: received_address,
         sent_address,
-        phone: foundUser.usr_phone,
-        avatar: foundUser.usr_avatar,
-        role: roleShop._id,
-        status: foundUser.usr_status,
+        usr_phone: foundUser.usr_phone,
+        usr_avatar: foundUser.usr_avatar,
+        usr_sex: foundUser.usr_sex,
+        usr_role: roleShop._id,
+        status: "pending",
       });
       await User.findByIdAndUpdate(foundUser._id, {
         $set: {
@@ -195,15 +204,16 @@ const updateUserToShopService = async ({
       const shop = await Shop.create({
         _id: user._id,
         usr_id: user.usr_id,
-        shop_name: user.usr_name,
-        password: user.usr_password,
-        email: user.usr_email,
+        usr_name: user.usr_name,
+        usr_password: user.usr_password,
+        usr_email: user.usr_email,
         received_address: received_address,
         sent_address,
-        phone: user.usr_phone,
-        avatar: user.usr_avatar,
-        role: roleShop._id,
-        status: user.usr_status,
+        usr_phone: user.usr_phone,
+        usr_avatar: user.usr_avatar,
+        usr_sex: user.usr_sex,
+        usr_role: roleShop._id,
+        status: "pending",
       });
       return shop;
     }
@@ -214,10 +224,40 @@ const updateUserToShopService = async ({
 
 // get user by usr_id
 const getDetailUserService = async (user_id) => {
-  console.log("ser", user_id);
   return await getDetailUser({ user_id });
 };
+const getMeService = async ({ userId }) => {
+  try {
+    const foundUser = await User.findById({
+      _id: new Types.ObjectId(userId),
+    })
+      .populate("usr_role")
+      .lean();
+    if (!foundUser) throw new AuthFailureError("Người dùng không tồn tại!");
+    // create token
+    const { privateKey, publicKey } = generateKey();
+    const { usr_name, usr_role } = foundUser;
+    const role = usr_role.rol_slug;
+    const tokens = await createTokenPair(
+      { userId, usr_name, role },
+      publicKey,
+      privateKey
+    );
+   const data =  await createKeyToken({
+      userId,
+      publicKey,
+      privateKey,
+      refreshToken: tokens.refreshToken,
+    });
 
+    return {
+      user: foundUser,
+      tokens,
+    };
+  } catch (error) {
+    throw new ErrorResponse(error);
+  }
+};
 module.exports = {
   createUserService,
   getListUserService,
@@ -225,4 +265,5 @@ module.exports = {
   updateUserService,
   blockUserService,
   updateUserToShopService,
+  getMeService,
 };
