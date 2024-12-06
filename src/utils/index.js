@@ -21,6 +21,9 @@ const randomCategoryId = () => {
 const randomProductId = () => {
   return Math.floor(Math.random() * 899999 + 100000);
 };
+const randomShippingId = () => {
+  return Math.floor(Math.random() * 899999 + 100000);
+};
 module.exports = {
   getInfoData,
   getSelectData,
@@ -29,4 +32,5 @@ module.exports = {
   randomUserId,
   randomCategoryId,
   randomProductId,
+  randomShippingId
 };

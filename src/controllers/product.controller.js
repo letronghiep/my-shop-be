@@ -14,7 +14,7 @@ const {
   getListProductByShopService,
   searchProductService,
 } = require("../services/product.service");
-
+const { getSingleSkuService } = require("../services/sku.service");
 // user
 const getAllProduct = async (req, res, next) => {
   new SuccessResponse({
@@ -53,6 +53,7 @@ const createProductByShop = async (req, res, next) => {
     message: "Product created",
     metadata: product,
   }).send(res);
+ 
 };
 const createProductByAdmin = async (req, res, next) => {
   new CREATED({
@@ -165,12 +166,39 @@ const getAllPublishedProduct = async (req, res, next) => {
     }),
   }).send(res);
 };
-const getAllDraftProduct = async (req, res, next) => {
+
+const getAllDraftProducts = async (req, res, next) => {
+  const { userId } = req.user;
+
+  const products = await getAllDraftProductsService({ userId });
+
   new SuccessResponse({
-    message: "List published products",
-    metadata: await getAllDraftProductsService({
-      product_shop: req.user.userId,
-    }),
+    message: "List draft products",
+    metadata: products,
+  }).send(res);
+};
+/**
+ * Handles the request to find a single SKU by product ID and SKU ID.
+ * Sends a success response with the SKU details if found.
+ *
+ * @param {Object} req - The request object containing query parameters.
+ * @param {Object} res - The response object for sending the response.
+ * @param {Function} next - The next middleware function in the stack.
+ */
+const findOneSku = async (req, res, next) => {
+  const { productId, skuId } = req.query;
+  const sku = await getSingleSkuService({
+    product_id: productId,
+    sku_id: skuId,
+  });
+
+  if (!sku) {
+    return next(new NotFoundError("Sku not found"));
+  }
+
+  new SuccessResponse({
+    message: "Sku found",
+    metadata: sku,
   }).send(res);
 };
 
@@ -189,8 +217,9 @@ module.exports = {
   deleteProductByAdmin,
   getAllProduct,
   getAllPublishedProduct,
-  getAllDraftProduct,
+  getAllDraftProducts,
   getListProductByShop,
   getProductById,
   searchProduct,
+  findOneSku,
 };

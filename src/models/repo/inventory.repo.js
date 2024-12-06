@@ -24,7 +24,6 @@ const updateInventory = async ({
     inven_stock: stock,
     inven_location: location,
   };
-  console.log("update inventory");
   return await Inventory.findOneAndUpdate(
     {
       inven_productId: productId,

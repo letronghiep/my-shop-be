@@ -2,7 +2,6 @@
 const { NotFoundError } = require("../core/error.response");
 const { paginate } = require("../helpers/paginate");
 const Product = require("../models/product.model");
-const Shop = require("../models/shop.model");
 const User = require("../models/user.model");
 const Sku = require("../models/sku.model");
 const {
@@ -15,9 +14,13 @@ const { createSkuService, updateSkuService } = require("./sku.service");
 const {
   foundProductByShop,
   getProductById,
+  updateStatusProduct,
 } = require("../models/repo/product.repo");
-const { filter } = require("lodash");
 const { getDetailUser } = require("../models/repo/user.repo");
+const { getIO } = require("../db/init.socket");
+const { pushNotifyToSystem } = require("./notification.service");
+const { Types } = require("mongoose");
+const io = getIO();
 /**
  * createProduct
  * getAllProduct
@@ -47,11 +50,9 @@ const createProductService = async ({
   sku_list = [],
 }) => {
   // 1. check shop exists or active
-  const foundShop = findShopById({
-    filter: {
-      _id: product_shop,
-      status: "active",
-    },
+  const foundShop = await findShopById({
+    _id: new Types.ObjectId(product_shop),
+    status: "active",
   });
   if (!foundShop) throw new NotFoundError("Shop chưa được đăng ký");
   // 2. create product
@@ -87,36 +88,44 @@ const createProductService = async ({
     stock: product.product_quantity,
   });
   // product.product_quantity = await Product.
+  const notify_content = `Người dùng <a>${product.product_shop}</a> vừa thêm một sản phẩm <a>${product._id}</a> vào giỏ hàng `;
+  const notification = await pushNotifyToSystem({
+    notify_content: notify_content,
+    notify_type: "SHOP-001",
+    senderId: product.product_shop,
+    options: {
+      // link:
+      // shorten Url or link product
+    },
+    receiverId: product.product_shop,
+  });
+  io.emit("productCreated", {
+    message: notify_content,
+    createdAt: notification.createdAt,
+    // metadata: product,
+  });
   return product;
 };
 
 // publishedProduct
 const publishedProductService = async ({ product_id, product_shop }) => {
   // check product exists
-  const foundProduct = await foundProductByShop({ product_id, product_shop });
-  if (!foundProduct) throw new NotFoundError("Sản phẩm không tồn tại");
-  // update product
-  foundProduct.isDraft = false;
-  foundProduct.isPublished = true;
-  await Sku.updateMany({
-    product_id: product_id,
-  });
-  return await Product.findByIdAndUpdate(product_id, foundProduct, {
-    new: true,
+  return await updateStatusProduct({
+    product_id,
+    product_shop,
+    isDraft: false,
+    isPublished: true,
   });
 };
 
 // draft product
 
 const draftProductService = async ({ product_id, product_shop }) => {
-  // check product exists
-  const foundProduct = await foundProductByShop({ product_id, product_shop });
-  if (!foundProduct) throw new NotFoundError("Sản phẩm không tồn tại");
-  // update product
-  foundProduct.isPublished = false;
-  foundProduct.isDraft = true;
-  return await Product.findByIdAndUpdate(product_id, foundProduct, {
-    new: true,
+  return await updateStatusProduct({
+    product_id,
+    product_shop,
+    isDraft: true,
+    isPublished: false,
   });
 };
 

@@ -39,9 +39,29 @@ const checkProductByServer = async (products) => {
     })
   );
 };
+const updateStatusProduct = async ({
+  product_id,
+  product_shop,
+  isDraft,
+  isPublished,
+}) => {
+  // check product exists
+  const foundProduct = await foundProductByShop({ product_id, product_shop });
+  if (!foundProduct) throw new NotFoundError("Sản phẩm không tồn tại");
+  // update product
+  foundProduct.isDraft = isDraft;
+  foundProduct.isPublished = isPublished;
+  await Sku.updateMany({
+    product_id: product_id,
+  });
+  return await Product.findByIdAndUpdate(product_id, foundProduct, {
+    new: true,
+  });
+};
 module.exports = {
   getProductById,
   foundProductByShop,
   findAllProduct,
   checkProductByServer,
+  updateStatusProduct,
 };

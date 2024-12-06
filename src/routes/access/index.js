@@ -10,7 +10,6 @@ const {
 const {
   checkAdmin,
   authentication,
-  checkSeller,
 } = require("../../middlewares/authentication");
 const router = express.Router();
 router.post("/signup", asyncHandler(signUp));

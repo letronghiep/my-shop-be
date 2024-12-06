@@ -14,9 +14,8 @@ const Shop = require("../models/shop.model");
 const { randomUserId } = require("../utils");
 const { default: slugify } = require("slugify");
 const { Types } = require("mongoose");
-const generateKey = require("../helpers/generateKey");
-const { createTokenPair } = require("../auth/authUtil");
-const { createKeyToken } = require("./keyToken.service");
+const KeyStore = require("../models/keyToken.model");
+const JWT = require("jsonwebtoken");
 /**
  * create user [admin]
  * get list user [admin]
@@ -95,7 +94,6 @@ const updateUserService = async ({
     $set: {
       usr_id,
       usr_name,
-      usr_slug: slugify(usr_name, { lower: true }),
       usr_full_name,
       usr_password,
       usr_salt,
@@ -235,24 +233,23 @@ const getMeService = async ({ userId }) => {
       .lean();
     if (!foundUser) throw new AuthFailureError("Người dùng không tồn tại!");
     // create token
-    const { privateKey, publicKey } = generateKey();
     const { usr_name, usr_role } = foundUser;
-    const role = usr_role.rol_slug;
-    const tokens = await createTokenPair(
-      { userId, usr_name, role },
-      publicKey,
-      privateKey
-    );
-   const data =  await createKeyToken({
-      userId,
-      publicKey,
-      privateKey,
-      refreshToken: tokens.refreshToken,
+    const keyStore = await KeyStore.findOne({
+      user: userId,
     });
-
+    console.log(keyStore)
+    const role = usr_role.rol_slug;
+    const accessToken = JWT.sign(
+      {
+        userId: foundUser._id,
+        usr_name,
+        role: role.rol_slug,
+      },
+      keyStore.publicKey
+    );
     return {
       user: foundUser,
-      tokens,
+      tokens: accessToken,
     };
   } catch (error) {
     throw new ErrorResponse(error);

@@ -19,7 +19,7 @@ router.get("/me", authentication, asyncHandler(getMe));
 router.get("/:user_id", asyncHandler(detailUser));
 // middlewares to authenticate the request
 router.post("/", authentication, isAdmin, asyncHandler(createUser));
-router.patch("/update/:usr_id", authentication, asyncHandler(updateUser));
+router.put("/update/:usr_id", authentication, asyncHandler(updateUser));
 router.get("/", authentication, isAdmin, asyncHandler(listUser));
 
 router.post("/seller", asyncHandler(createShop));
