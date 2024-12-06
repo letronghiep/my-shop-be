@@ -1,13 +1,17 @@
-
 const credentials = (req, res, next) => {
-  // const origin = req.headers.origin;
-  // if (allowedOrigins.includes(origin))
-  res.header("Access-Control-Allow-Origin", true);
-  // res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Headers", "X-Requested-With");
-  res.setHeader("Access-Control-Allow-Methods", "PUT,POST,GET,DELETE,OPTIONS");
-  res.setHeader("Content-Type", "application/json;charset=utf-8");
-  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader("Access-Control-Allow-Origin", true);
+  // res.setHeader("Access-Control-Allow-Origin", true);
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+  );
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Origin, Content-Type, Accept, Authorization"
+  );
+  res.setHeader("Content-Type", "application/json;charset=UTF-8");
+  res.setHeader("Access-Control-Allow-Credentials", true);
   next();
 };
+
 module.exports = credentials;

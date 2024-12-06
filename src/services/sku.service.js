@@ -11,6 +11,11 @@ const { randomProductId } = require("../utils");
  */
 const Sku = require("../models/sku.model");
 const { NotFoundError } = require("../core/error.response");
+const { CACHE_PRODUCT } = require("../configs/constant");
+const {
+  getCacheIO,
+  setCacheIOExpiration,
+} = require("../models/repo/cache.repo");
 const createSkuService = async ({ product_id, sku_list }) => {
   try {
     const convert_sku_list = sku_list.map((sku) => {
@@ -82,11 +87,40 @@ const getAllSkuService = async ({ product_id }) => {
 };
 const getSingleSkuService = async ({ product_id, sku_id }) => {
   try {
-    const sku = await Sku.findOne({
-      sku_id,
-      product_id,
-    }).lean();
-    return _.omit(sku, ["__v", "createdAt", "updatedAt", "isDeleted"]);
+    //1. check params
+    if (!sku_id < 0) return null;
+    if (!product_id < 0) return null;
+    //2. read cache
+    const skuKeyCache = `${CACHE_PRODUCT.SKU}${sku_id}`; // key cache
+    let skuCache = await getCacheIO({ key: skuKeyCache });
+    if (skuCache) {
+      return {
+        ...JSON.parse(skuCache),
+        toLoad: "cache", // dbs
+      };
+    }
+    //3.read from dbs
+    if (!skuCache) {
+      skuCache = await Sku.findOne({
+        sku_id,
+        product_id,
+      }).lean();
+      const valueCache = skuCache ? skuCache : null;
+      setCacheIOExpiration({
+        key: skuKeyCache,
+        value: JSON.stringify(valueCache),
+        expirationInSecond: 30,
+      }).then();
+    }
+    return {
+      skuCache,
+      toLoad: "dbs", // dbs
+    };
+    // const sku = await Sku.findOne({
+    //   sku_id,
+    //   product_id,
+    // }).lean();
+    // return _.omit(sku, ["__v", "createdAt", "updatedAt", "isDeleted"]);
   } catch (error) {
     console.log("Có lỗi xảy ra::", error);
     return null;

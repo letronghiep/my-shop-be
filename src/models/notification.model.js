@@ -11,7 +11,6 @@ var notifySchema = new Schema(
     notify_type: {
       type: String,
       required: true,
-      enum: ["ORDER-001", "ORDER-002", "PROMOTION-001", "SHOP-001"],
     },
     notify_senderId: {
       type: Types.ObjectId,

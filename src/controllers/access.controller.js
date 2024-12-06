@@ -6,11 +6,13 @@ const {
   loginService,
   logoutService,
   handleRefreshTokenService,
-  sellerSignUpService,
-  loginBySellerService,
 } = require("../services/access.service");
 const signUp = async (req, res, next) => {
-  const data = await signUpService(req.body);
+  const data = await signUpService({
+    usr_name: req.body.username,
+    usr_password: req.body.password,
+    usr_full_name: req.body.fullname,
+  });
   const { tokens } = data;
   // set cookies
   res.cookie("refreshToken", tokens.refreshToken, {
@@ -40,24 +42,26 @@ const login = async (req, res, next) => {
   }).send(res);
 };
 const logout = async (req, res, next) => {
-  const refreshToken = req.cookies.refreshToken;
-  if (!refreshToken) {
-    throw new BadRequestError("Người dùng không tồn tại");
+  try {
+    const result = await logoutService(req.keyStore);
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+    });
+    new SuccessResponse({
+      message: "User logged out successfully",
+      metadata: result,
+    }).send(res);
+  } catch (error) {
+    next(error);
   }
-  res.clearCookie("refreshToken", {
-    httpOnly: true,
-  });
-  new SuccessResponse({
-    message: "User logged out successfully",
-    metadata: await logoutService(req.keyStore),
-  }).send(res);
+
 };
 const handleRefreshToken = async (req, res, next) => {
   const data = await handleRefreshTokenService({
     refreshToken: req.cookies.refreshToken,
     user: req.user,
     keyStore: req.keyStore,
-  })
+  });
   const { tokens } = data;
   // set cookies
   res.cookie("refreshToken", tokens.refreshToken, {
@@ -66,7 +70,7 @@ const handleRefreshToken = async (req, res, next) => {
   });
   new SuccessResponse({
     message: "Refresh token handle successfully",
-    metadata: data
+    metadata: data,
   }).send(res);
 };
 

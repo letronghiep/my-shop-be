@@ -12,8 +12,8 @@ const paginate = async ({
   try {
     const skip = (page - 1) * limit;
     const sortBy = sort === "ctime" ? { createdAt: -1 } : { createdAt: 1 };
-    const totalRow = await model.countDocuments(filter);
-    const totalPage = Math.ceil(totalRow / limit);
+    const totalRows = await model.countDocuments(filter);
+    const totalPages = Math.ceil(totalRows / limit);
     const data = await model
       .find(filter)
       .sort(sortBy)
@@ -25,8 +25,8 @@ const paginate = async ({
     return {
       limit,
       currentPage: page,
-      totalRow,
-      totalPage,
+      totalRows,
+      totalPages,
       data,
     };
   } catch (error) {

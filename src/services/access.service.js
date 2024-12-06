@@ -18,7 +18,7 @@ const { createKeyToken, removeKeyById } = require("./keyToken.service");
 const { getInfoData, randomUserId } = require("../utils");
 const { createTokenPair, verifyJWT } = require("../auth/authUtil");
 
-const signUpService = async ({ usr_name, usr_password }) => {
+const signUpService = async ({ usr_name, usr_password, usr_full_name }) => {
   try {
     const holderUser = await User.findOne({ usr_name }).lean();
     if (holderUser) {
@@ -33,8 +33,9 @@ const signUpService = async ({ usr_name, usr_password }) => {
     const newUser = await User.create({
       usr_id: randomUserId(),
       usr_name,
+      usr_full_name,
       usr_password: passwordHash,
-      usr_status: "pending",
+      usr_status: "active",
       usr_role: role._id,
     });
     if (newUser) {
@@ -112,6 +113,7 @@ const loginService = async ({ usr_name, usr_password }) => {
 // logout
 const logoutService = async (keyStore) => {
   try {
+    console.log(keyStore);
     const delKey = await removeKeyById(keyStore._id);
     return delKey;
   } catch (error) {

@@ -1,7 +1,7 @@
 const { HEADER } = require("../constants");
 const User = require("../models/user.model");
 const Shop = require("../models/shop.model");
-const jwt = require("jsonwebtoken");
+const JWT = require("jsonwebtoken");
 const {
   BadRequestError,
   NotFoundError,
@@ -20,9 +20,7 @@ const authentication = async (req, res, next) => {
     const accessToken = token.split("Bearer ")[1];
     const keyStore = await findKeyTokenByUser({ userId });
     if (!keyStore) throw new AuthFailureError("Người dùng không hợp lệ");
-    console.log({ accessToken, keyStore: keyStore.publicKey });
-    const decodeUser = await jwt.verify(accessToken, keyStore.publicKey);
-    console.log({ decodeUser });
+    const decodeUser = await JWT.verify(accessToken, keyStore.publicKey);
     if (userId !== decodeUser.userId)
       throw new AuthFailureError("Người dùng không hợp lệ");
     req.user = decodeUser;
