@@ -16,4 +16,5 @@ router.use("/v1/api/rbac", require("./rbac"));
 router.use("/v1/api/auth", require("./access"));
 router.use("/v1/api/user", require("./user"));
 router.use("/v1/api/shipping", require("./shipping"));
+router.use("/v1/api/pageview", require("./pageview"));
 module.exports = router;

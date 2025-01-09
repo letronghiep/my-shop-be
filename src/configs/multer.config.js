@@ -6,6 +6,9 @@ const uploadMemory = multer({
 });
 
 const uploadDisk = multer({
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB
+  },
   storage: multer.diskStorage({
     destination: function (req, file, cb) {
       cb(null, "./src/uploads/");

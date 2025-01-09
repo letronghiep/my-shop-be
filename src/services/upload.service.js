@@ -1,5 +1,6 @@
 "use strict";
 const cloudinary = require("../configs/cloudinary.config");
+const { removeFileFromDirectory } = require("../helpers/removeFile");
 const uploadImageFromUrl = async ({ url, folderName, shopId, fileName }) => {
   try {
     const result = await cloudinary.uploader.upload(url, {
@@ -39,7 +40,33 @@ const uploadImageFromLocal = async ({ path, folderName, shopId }) => {
     console.log("Error upload", error);
   }
 };
-
+const uploadImageFromLocalFile = async ({ file, folderName, shopId }) => {
+  try {
+    if (!file) {
+      console.log("Error");
+      return;
+    }
+    const result = await cloudinary.uploader.upload(file.path, {
+      folder: folderName,
+    });
+    if (result) {
+      const uploadedUrl = {
+        image_url: result.secure_url,
+        shopId: shopId,
+        thumb_url: await cloudinary.url(result.public_id, {
+          height: 100,
+          width: 100,
+          format: "jpg",
+        }),
+      };
+      const pathName = `./src/uploads`;
+      await removeFileFromDirectory(pathName);
+      return uploadedUrl;
+    } else return null;
+  } catch (error) {
+    console.error("Error uploading images::", error);
+  }
+};
 const uploadImageFromLocalFiles = async ({ files, folderName, shopId }) => {
   try {
     if (!files.length) {
@@ -68,5 +95,6 @@ const uploadImageFromLocalFiles = async ({ files, folderName, shopId }) => {
 module.exports = {
   uploadImageFromUrl,
   uploadImageFromLocal,
+  uploadImageFromLocalFile,
   uploadImageFromLocalFiles,
 };

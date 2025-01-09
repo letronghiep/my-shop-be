@@ -26,11 +26,11 @@ const getPaginateAddressList = async ({ page, limit, filter, sort }) => {
     await setCacheIOExpiration({
       key: addressKeyCache,
       value: JSON.stringify(valueCache),
-      expirationInSecond: 3600,
+      expirationInSecond: 60,
     });
     return {
-      addressCache,
-      toLoad: "dbs",
+      ...addressCache,
+      toLoad: "db",
     };
   } catch (error) {
     throw error;

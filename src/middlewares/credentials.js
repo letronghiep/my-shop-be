@@ -1,6 +1,5 @@
 const credentials = (req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", true);
-  // res.setHeader("Access-Control-Allow-Origin", true);
   res.setHeader(
     "Access-Control-Allow-Methods",
     "GET, POST, PUT, PATCH, DELETE, OPTIONS"
@@ -9,7 +8,6 @@ const credentials = (req, res, next) => {
     "Access-Control-Allow-Headers",
     "Origin, Content-Type, Accept, Authorization"
   );
-  res.setHeader("Content-Type", "application/json;charset=UTF-8");
   res.setHeader("Access-Control-Allow-Credentials", true);
   next();
 };

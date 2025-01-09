@@ -30,12 +30,14 @@ const getAdmin = async () => {
     return JSON.parse(idAdmin);
   } else {
     const admin = await User.findOne({ usr_id: 0 });
-    await setCacheIOExpiration({
-      key: cacheAdmin,
-      value: JSON.stringify(admin._id),
-      expirationInSecond: 3600,
-    });
-    return admin._id;
+    if (admin){
+      await setCacheIOExpiration({
+        key: cacheAdmin,
+        value: JSON.stringify(admin._id),
+        expirationInSecond: 3600,
+      });
+    return admin._id;}
+    else return null;
   }
 };
 module.exports = {

@@ -1,6 +1,10 @@
 "use strict";
 const { SuccessResponse } = require("../core/success.response");
-const { uploadImageFromUrl } = require("../services/upload.service");
+const {
+  uploadImageFromUrl,
+  uploadImageFromLocalFiles,
+  uploadImageFromLocalFile,
+} = require("../services/upload.service");
 
 const uploadFile = async (req, res, next) => {
   new SuccessResponse({
@@ -13,6 +17,17 @@ const uploadFile = async (req, res, next) => {
     }),
   }).send(res);
 };
+const uploadImgFromLocal = async (req, res, next) => {
+  new SuccessResponse({
+    message: "File uploaded successfully",
+    metadata: await uploadImageFromLocalFile({
+      file: req.file,
+      folderName: `users/${req.user.userId}`,
+      shopId: req.user.userId,
+    }),
+  }).send(res);
+};
 module.exports = {
   uploadFile,
+  uploadImgFromLocal,
 };

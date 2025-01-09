@@ -8,6 +8,7 @@ const { getDiscountAmount } = require("../controllers/discount.controller");
 const { acquireLock, releaseLock } = require("../services/redis.service");
 const { deleteUserCartService } = require("./cart.service");
 const { producer } = require("./rabbitMQ.service");
+const { getOrderByUserList } = require("../models/repo/checkout.repo");
 /* 
     {
         cartId,
@@ -165,11 +166,20 @@ const orderByUserService = async ({
 /*
  Query order
  */
-const getOrderByUserService = async ({ userId, limit = 20, skip = 0 }) => {
-  const query = {
-    order_userId: userId,
-  };
-  return await Order.find(query).skip(skip).limit(limit);
+const getOrderByUserService = async ({
+  userId,
+  limit = 50,
+  sort = "ctime",
+  page = 1,
+  filter = {},
+}) => {
+  if (!userId) return null;
+  return await getOrderByUserList({
+    limit,
+    sort,
+    page,
+    filter: { order_userId: userId },
+  });
 };
 const getDetailOrderService = async ({ userId, orderId }) => {
   return await Order.findOne({
