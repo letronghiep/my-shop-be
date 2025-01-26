@@ -17,4 +17,6 @@ router.use("/v1/api/auth", require("./access"));
 router.use("/v1/api/user", require("./user"));
 router.use("/v1/api/shipping", require("./shipping"));
 router.use("/v1/api/pageview", require("./pageview"));
+router.use("/v1/api/analysis", require("./analysis"));
+router.use("/v1/api/shipment", require("./shipment"));
 module.exports = router;

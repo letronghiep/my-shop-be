@@ -17,10 +17,11 @@ const authentication = async (req, res, next) => {
     if (!token || !token.startsWith("Bearer "))
       throw new AuthFailureError("Kiểm tra lại thông tin");
     const userId = await req.headers[HEADER.CLIENT_ID];
+    console.log(userId);
     const accessToken = token.split("Bearer ")[1];
     const keyStore = await findKeyTokenByUser({ userId });
     if (!keyStore) throw new AuthFailureError("Người dùng không hợp lệ");
-    const decodeUser = await JWT.verify(accessToken, keyStore.publicKey);
+    const decodeUser = JWT.verify(accessToken, keyStore.publicKey);
     if (userId !== decodeUser.userId)
       throw new AuthFailureError("Người dùng không hợp lệ");
     req.user = decodeUser;

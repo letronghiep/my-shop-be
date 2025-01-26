@@ -114,7 +114,7 @@ const createShippingByUser = async ({
   const addressKeyCacheItem = `${CACHE_SHIPPING["SHIPPING"]}:*`;
   await clearCachePattern(addressKeyCacheItem);
   await clearCachePattern(addressKeyCache);
-  // await io.emit("new address", newAddress._id);
+  await io.emit("new address", newAddress._id);
   return newAddress;
 };
 const updateShippingService = async ({

@@ -120,6 +120,7 @@ const logoutService = async (keyStore) => {
     throw error;
   }
 };
+
 const handleRefreshTokenService = async ({ refreshToken, keyStore, user }) => {
   const { userId, usr_name, role } = user;
   if (keyStore.refreshTokenUsed.includes(refreshToken))
@@ -139,6 +140,7 @@ const handleRefreshTokenService = async ({ refreshToken, keyStore, user }) => {
     keyStore.publicKey,
     keyStore.privateKey
   );
+  console.log(tokens);
   // Update tokens;
   await KeyStore.updateOne({
     $set: {

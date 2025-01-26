@@ -9,6 +9,7 @@ const { acquireLock, releaseLock } = require("../services/redis.service");
 const { deleteUserCartService } = require("./cart.service");
 const { producer } = require("./rabbitMQ.service");
 const { getOrderByUserList } = require("../models/repo/checkout.repo");
+const { randomString } = require("../utils");
 /* 
     {
         cartId,
@@ -145,6 +146,7 @@ const orderByUserService = async ({
   }
   const newOrder = await Order.create({
     order_userId: userId,
+    order_id: randomString(),
     order_checkout: checkout_order,
     order_shipping: user_address,
     order_payment: user_payment,
@@ -174,12 +176,40 @@ const getOrderByUserService = async ({
   filter = {},
 }) => {
   if (!userId) return null;
-  return await getOrderByUserList({
+  const { order_status } = filter;
+  console.log(order_status);
+  let status;
+  switch (order_status) {
+    case "pending":
+      status = "pending";
+      break;
+    case "canceled":
+      status = "canceled";
+      break;
+    case "delivered":
+      status = "delivered";
+      break;
+    case "confirmed":
+      status = "confirmed";
+      break;
+    case "shipped":
+      status = "shipped";
+      break;
+    default:
+      status = "";
+      break;
+  }
+  const filterStatus = status !== "" ? { order_status: status } : null;
+  const result = await getOrderByUserList({
     limit,
     sort,
     page,
-    filter: { order_userId: userId },
+    filter: { order_userId: userId, order_status: status },
   });
+
+  return {
+    ...result,
+  };
 };
 const getDetailOrderService = async ({ userId, orderId }) => {
   return await Order.findOne({

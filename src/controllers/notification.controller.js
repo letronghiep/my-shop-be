@@ -1,12 +1,40 @@
 "use strict";
 const { SuccessResponse } = require("../core/success.response");
-const { listNotifyByUserService } = require("../services/notification.service");
+const {
+  listNotifyByUserService,
+  updateReadNotifyService,
+  countNotificationService,
+} = require("../services/notification.service");
 const listNotifyByUser = async (req, res, next) => {
+  console.log(req.query);
   new SuccessResponse({
     message: "list listNotifyByUser",
-    metadata: await listNotifyByUserService(req.query),
+    metadata: await listNotifyByUserService({
+      userId: req.query.user_id,
+      isAll: req.query.isAll,
+    }),
   }).send(res);
 };
-module.exports = {
-    listNotifyByUser,
+const updateReadNotification = async (req, res, next) => {
+  new SuccessResponse({
+    message: "update read notification",
+    metadata: await updateReadNotifyService({
+      notify_id: req.params.notify_id,
+      receiverId: req.user.userId,
+    }),
+  }).send(res);
+};
+const countNotifications = async(req, res,next) => {
+  new SuccessResponse({
+    message: "count notifications",
+    metadata: await countNotificationService({
+      receiverId: req.user.userId,
+      isRead: req.query.isRead,
+    }),
+  }).send(res);
 }
+module.exports = {
+  listNotifyByUser,
+  updateReadNotification,
+  countNotifications
+};

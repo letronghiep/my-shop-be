@@ -6,9 +6,6 @@ const {
   createProductByAdmin,
   getAllProduct,
   getAllPublishedProduct,
-  publishedProductByShop,
-  publishedProductByAdmin,
-  draftProductByShop,
   draftProductByAdmin,
   deleteProductByAdmin,
   blockProductByShop,
@@ -27,11 +24,10 @@ const router = express.Router();
 // user
 
 router.get("", asyncHandler(getAllProduct));
-router.get("/shop/:product_shop", asyncHandler(getListProductByShop));
 router.get("/search", asyncHandler(searchProduct));
+router.get("/seller", authentication, asyncHandler(getListProductByShop));
 router.get("/:product_id", asyncHandler(getProductById));
 router.get("/sku/select_variant", asyncHandler(findOneSku));
-router.use(authentication);
 // shop
 router.post(
   "/seller",
@@ -56,16 +52,6 @@ router.get(
   asyncHandler(getAllDraftProducts)
 );
 router.post(
-  "/seller/published/:product_id",
-  grantAccess("updateOwn", "product"),
-  asyncHandler(publishedProductByShop)
-);
-router.post(
-  "/seller/draft/:product_id",
-  grantAccess("updateOwn", "product"),
-  asyncHandler(draftProductByShop)
-);
-router.post(
   "/seller/block/:product_id",
   grantAccess("updateOwn", "product"),
   asyncHandler(blockProductByShop)
@@ -80,11 +66,6 @@ router.post(
   "/admin",
   grantAccess("createAny", "product"),
   asyncHandler(createProductByAdmin)
-);
-router.post(
-  "/admin/published",
-  grantAccess("updateAny", "product"),
-  asyncHandler(publishedProductByAdmin)
 );
 router.post(
   "/admin/draft",

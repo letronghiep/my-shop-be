@@ -1,5 +1,5 @@
 "use strict";
-const { BadRequestError } = require("../core/error.response");
+const { BadRequestError, NotFoundError } = require("../core/error.response");
 const KeyToken = require("../models/keyToken.model");
 const createKeyToken = async ({
   userId,
@@ -26,6 +26,7 @@ const createKeyToken = async ({
 const findKeyTokenByUser = async ({ userId }) => {
   try {
     const token = await KeyToken.findOne({ user: userId }).lean();
+    if (!token) throw new NotFoundError('Không tìm thấy user');
     return token;
   } catch (error) {
     throw new BadRequestError("Xảy ra lỗi");

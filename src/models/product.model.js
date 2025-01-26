@@ -21,6 +21,10 @@ var productSchema = new Schema(
       unique: true,
     },
     product_thumb: { type: String, required: true },
+    product_images: {
+      type: [String],
+      default: [],
+    },
     product_description: String,
     product_price: {
       type: Number,
@@ -54,22 +58,11 @@ var productSchema = new Schema(
       type: Array,
       default: [],
     },
-    isDraft: {
-      type: Boolean,
-      default: true,
-      index: true,
-      select: false,
-    },
-    isPublished: {
-      type: Boolean,
-      default: false,
-      index: true,
-      select: false,
-    },
-    isBlocked: {
-      type: Boolean,
-      default: false,
-    },
+    product_status: {
+      type: String,
+      enum: ["published", "draft", "blocked", "deleted"],
+      default: "published",
+    }
   },
   {
     timestamp: true,

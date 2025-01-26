@@ -12,7 +12,7 @@ module.exports = {
     ADMIN: "admin",
   },
   CACHE_ORDER: {
-    "ORDER-LIST": "orders",
+    "ORDER_LIST": "orders",
     ORDER: "order-u-",
     "TOTAL-PAGE": "totalPages",
     PAGE: "page",

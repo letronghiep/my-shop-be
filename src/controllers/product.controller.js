@@ -3,16 +3,13 @@ const { CREATED, SuccessResponse } = require("../core/success.response");
 const {
   createProductService,
   getAllProductService,
-  getAllPublishedProductsService,
-  getAllDraftProductsService,
-  publishedProductService,
-  draftProductService,
   blockProductService,
   deleteProductService,
   updateProductService,
   getDetailProductService,
   getListProductByShopService,
   searchProductService,
+  updateProductStatusService,
 } = require("../services/product.service");
 const { getSingleSkuService } = require("../services/sku.service");
 // user
@@ -35,13 +32,20 @@ const getProductById = async (req, res, next) => {
 const getListProductByShop = async (req, res, next) => {
   new SuccessResponse({
     message: "List product by shop",
-    metadata: await getListProductByShopService(req.params),
+    metadata: await getListProductByShopService({
+      product_shop: req.user.userId,
+      q: req.query.q,
+      product_status: req.query.product_status,
+    }),
   }).send(res);
 };
 const searchProduct = async (req, res, next) => {
   new SuccessResponse({
     message: "Search product",
-    metadata: await searchProductService(req.query),
+    metadata: await searchProductService({
+      q: req.query.q,
+      product_status: req.query.product_status,
+    }),
   }).send(res);
 };
 const createProductByShop = async (req, res, next) => {
@@ -53,7 +57,6 @@ const createProductByShop = async (req, res, next) => {
     message: "Product created",
     metadata: product,
   }).send(res);
- 
 };
 const createProductByAdmin = async (req, res, next) => {
   new CREATED({
@@ -64,22 +67,24 @@ const createProductByAdmin = async (req, res, next) => {
   }).send(res);
 };
 
-const publishedProductByShop = async (req, res, next) => {
+const updateStatusProductByShop = async (req, res, next) => {
   new SuccessResponse({
     message: "Published success",
-    metadata: await publishedProductService({
+    metadata: await updateProductStatusService({
       product_id: req.params.product_id,
       product_shop: req.user.userId,
+      product_status: req.params.product_status,
     }),
   }).send(res);
 };
 
-const publishedProductByAdmin = async (req, res, next) => {
+const updateStatusProductByAdmin = async (req, res, next) => {
   new SuccessResponse({
     message: "Published success",
-    metadata: await publishedProductService({
+    metadata: await updateProductStatusService({
       product_id: req.query.product_id,
       product_shop: req.query.product_shop,
+      product_status: req.params.product_status,
     }),
   }).send(res);
 };
@@ -205,13 +210,13 @@ const findOneSku = async (req, res, next) => {
 module.exports = {
   createProductByShop,
   updateProductByShop,
-  publishedProductByShop,
+  updateStatusProductByShop,
   draftProductByShop,
   blockProductByShop,
   deleteProductByShop,
 
   createProductByAdmin,
-  publishedProductByAdmin,
+  updateStatusProductByAdmin,
   draftProductByAdmin,
   blockProductByAdmin,
   deleteProductByAdmin,

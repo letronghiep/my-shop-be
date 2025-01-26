@@ -22,8 +22,6 @@ const uploadImgFromLocal = async (req, res, next) => {
     message: "File uploaded successfully",
     metadata: await uploadImageFromLocalFile({
       file: req.file,
-      folderName: `users/${req.user.userId}`,
-      shopId: req.user.userId,
     }),
   }).send(res);
 };

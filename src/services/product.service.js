@@ -39,6 +39,7 @@ const io = getIO();
 const createProductService = async ({
   product_name,
   product_thumb,
+  product_images,
   product_description,
   product_price,
   product_category,
@@ -60,6 +61,7 @@ const createProductService = async ({
     product_id: randomProductId(),
     product_name,
     product_thumb,
+    product_images,
     product_description,
     product_price,
     product_category,
@@ -107,25 +109,17 @@ const createProductService = async ({
   return product;
 };
 
-// publishedProduct
-const publishedProductService = async ({ product_id, product_shop }) => {
-  // check product exists
-  return await updateStatusProduct({
-    product_id,
-    product_shop,
-    isDraft: false,
-    isPublished: true,
-  });
-};
-
 // draft product
 
-const draftProductService = async ({ product_id, product_shop }) => {
+const updateProductStatusService = async ({
+  product_id,
+  product_shop,
+  product_status,
+}) => {
   return await updateStatusProduct({
     product_id,
     product_shop,
-    isDraft: true,
-    isPublished: false,
+    product_status,
   });
 };
 
@@ -157,6 +151,7 @@ const updateProductService = async ({
   product_id,
   product_name,
   product_thumb,
+  product_images,
   product_description,
   product_price,
   product_category,
@@ -183,6 +178,7 @@ const updateProductService = async ({
   const updateFields = {
     product_name,
     product_thumb,
+    product_images,
     product_description,
     product_price,
     product_category,
@@ -269,51 +265,32 @@ const getAllProductService = async ({
   });
 };
 
-const getAllPublishedProductsService = async ({
-  product_shop,
-  filter = { product_shop, isPublished: true },
-  limit = 50,
-  sort = "ctime",
-  page = 1,
-}) => {
-  return await paginate({
-    model: Product,
-    filter,
-    limit,
-    page,
-    sort,
-  });
-};
-
-const getAllDraftProductsService = async ({
-  product_shop,
-  filter = { product_shop, isDraft: true },
-  limit = 50,
-  sort = "ctime",
-  page = 1,
-}) => {
-  return await paginate({
-    model: Product,
-    filter,
-    limit,
-    page,
-    sort,
-  });
-};
 // get list product for shop
-const getListProductByShopService = async ({ product_shop }) => {
+const getListProductByShopService = async ({
+  product_shop,
+  q,
+  product_status,
+}) => {
+  // if (product_status)
+  const searchText = q
+    ? {
+        $or: [
+          { product_name: { $regex: q, $options: "i" } }, // Tìm trong tên sản phẩm
+          { product_description: { $regex: q, $options: "i" } }, // Tìm trong mô tả sản phẩm
+        ],
+      }
+    : {};
+
   const foundProducts = await paginate({
     model: Product,
-    filter: { product_shop },
+    filter: {
+      product_shop: new Types.ObjectId(product_shop),
+      ...searchText,
+      ...(product_status !== "all" ? { product_status } : {}),
+    },
     limit: 50,
     page: 1,
     sort: "ctime",
-    select: [
-      "product_name",
-      "product_thumb",
-      "product_price",
-      "product_ratingAvg",
-    ],
   });
   return foundProducts;
 };
@@ -325,16 +302,24 @@ const getDetailProductService = async ({ product_id }) => {
   if (!foundProduct) throw new NotFoundError("Không tìm thấy sản phẩm");
   return foundProduct;
 };
+
 // search
-const searchProductService = async ({ q }) => {
-  const searchReg = new RegExp(q, "i");
+const searchProductService = async ({ q, product_status }) => {
+  const searchText = q
+    ? {
+        $or: [
+          { product_name: { $regex: `.*${q}.*`, $options: "i" } }, // Tìm trong tên sản phẩm
+          { product_description: { $regex: `.*${q}.*`, $options: "i" } }, // Tìm trong mô tả sản phẩm
+        ],
+      }
+    : {};
   const result = await paginate({
     model: Product,
     filter: {
-      $text: { $search: searchReg },
-      isPublished: true,
+      ...searchText,
+      ...(product_status && { product_status }),
     },
-    sort: { score: { $meta: "textScore" } },
+    // sort: { score: { $meta: "textScore" } },
   });
   return result;
 };
@@ -342,13 +327,10 @@ const searchProductService = async ({ q }) => {
 module.exports = {
   createProductService,
   updateProductService,
-  draftProductService,
-  publishedProductService,
+  updateProductStatusService,
   blockProductService,
   deleteProductService,
   getAllProductService,
-  getAllPublishedProductsService,
-  getAllDraftProductsService,
   getListProductByShopService,
   getDetailProductService,
   searchProductService,

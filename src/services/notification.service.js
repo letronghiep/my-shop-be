@@ -1,5 +1,9 @@
 "use strict";
+const { Types } = require("mongoose");
 const Notification = require("../models/notification.model");
+const { NotFoundError, BadRequestError } = require("../core/error.response");
+const { getIO } = require("../db/init.socket");
+const io = getIO();
 const pushNotifyToSystem = async ({
   type = "SHOP-001",
   receiverId,
@@ -27,14 +31,17 @@ const pushNotifyToSystem = async ({
   });
   return newNotify;
 };
-const listNotifyByUserService = async ({
-  userId,
-  type = "ALL",
-  isRead = 0,
-}) => {
-  const match = { notify_receiverId: userId };
-  if (type !== "ALL") {
-    match["notify_type"] = type;
+const listNotifyByUserService = async ({ userId, isAll }) => {
+  let match;
+  if (isAll == true) {
+    match = {
+      notify_receiverId: new Types.ObjectId(userId),
+    };
+  } else {
+    match = {
+      notify_receiverId: new Types.ObjectId(userId),
+      notify_isRead: false,
+    };
   }
 
   return await Notification.aggregate([
@@ -48,13 +55,47 @@ const listNotifyByUserService = async ({
         notify_receiverId: 1,
         notify_content: 1,
         notify_isRead: 1,
-        notify_createdAt: 1,
+        createdAt: 1,
         notify_options: 1,
+        count_not_read: 1,
       },
     },
   ]);
 };
+const updateReadNotifyService = async ({ notify_id, receiverId }) => {
+  const notification = await Notification.findOne({
+    _id: new Types.ObjectId(notify_id),
+    notify_receiverId: new Types.ObjectId(receiverId),
+    notify_isRead: false,
+  });
+  if (!notification) {
+    throw new NotFoundError("Thông báo không tồn tại");
+  }
+  const notifyUpdated = await notification.updateOne(
+    {
+      notify_isRead: true,
+    },
+    {
+      new: true,
+      upsert: true,
+    }
+  );
+  if (!notifyUpdated) {
+    throw new BadRequestError("Cập nhật thông báo thất bại");
+  }
+  await io.emit("read:notification", "1");
+  return notifyUpdated;
+};
+const countNotificationService = async ({ receiverId, isRead }) => {
+  const count = await Notification.countDocuments({
+    notify_receiverId: new Types.ObjectId(receiverId),
+    notify_isRead: isRead,
+  });
+  return count;
+};
 module.exports = {
   pushNotifyToSystem,
   listNotifyByUserService,
+  updateReadNotifyService,
+  countNotificationService,
 };

@@ -16,7 +16,7 @@ var categorySchema = new Schema(
       type: String,
       default: "",
     },
-    category_thumb: {
+    slug: {
       type: String,
       default: "",
     },
@@ -34,7 +34,7 @@ var categorySchema = new Schema(
     },
     category_feature: {
       type: Boolean,
-      default: false
+      default: false,
     },
     isDeleted: {
       type: Boolean,
@@ -46,4 +46,13 @@ var categorySchema = new Schema(
     collection: COLLECTION_NAME,
   }
 );
+
+categorySchema.index({ category_name: "text" });
+
+categorySchema.pre("save", function (next) {
+  this.slug = slugify(this.name, { lower: true });
+
+  next();
+});
+
 module.exports = model(DOCUMENT_NAME, categorySchema);

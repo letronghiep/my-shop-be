@@ -40,19 +40,19 @@ const uploadImageFromLocal = async ({ path, folderName, shopId }) => {
     console.log("Error upload", error);
   }
 };
-const uploadImageFromLocalFile = async ({ file, folderName, shopId }) => {
+const uploadImageFromLocalFile = async ({ file }) => {
   try {
     if (!file) {
       console.log("Error");
       return;
     }
     const result = await cloudinary.uploader.upload(file.path, {
-      folder: folderName,
+      folder: 'images',
     });
     if (result) {
       const uploadedUrl = {
         image_url: result.secure_url,
-        shopId: shopId,
+        // shopId: shopId,
         thumb_url: await cloudinary.url(result.public_id, {
           height: 100,
           width: 100,

@@ -1,9 +1,10 @@
 "use strict";
+const { Types } = require("mongoose");
 const { getSelectData } = require("../../utils");
 const Product = require("../product.model");
 const getProductById = async ({ productId }) => {
   return await Product.findOne({
-    _id: productId,
+    _id: new Types.ObjectId(productId),
     isPublished: true,
   }).lean();
 };
@@ -42,15 +43,12 @@ const checkProductByServer = async (products) => {
 const updateStatusProduct = async ({
   product_id,
   product_shop,
-  isDraft,
-  isPublished,
+  product_status,
 }) => {
   // check product exists
   const foundProduct = await foundProductByShop({ product_id, product_shop });
   if (!foundProduct) throw new NotFoundError("Sản phẩm không tồn tại");
-  // update product
-  foundProduct.isDraft = isDraft;
-  foundProduct.isPublished = isPublished;
+  foundProduct.product_status = product_status;
   await Sku.updateMany({
     product_id: product_id,
   });

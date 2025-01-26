@@ -35,6 +35,7 @@ const getOrderByUser = async (req, res, next) => {
     message: "get order by user",
     metadata: await getOrderByUserService({
       userId: req.user.userId,
+      filter: req.query,
     }),
   }).send(res);
 };
