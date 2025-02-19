@@ -47,7 +47,7 @@ const uploadImageFromLocalFile = async ({ file }) => {
       return;
     }
     const result = await cloudinary.uploader.upload(file.path, {
-      folder: 'images',
+      folder: "images",
     });
     if (result) {
       const uploadedUrl = {
@@ -67,26 +67,32 @@ const uploadImageFromLocalFile = async ({ file }) => {
     console.error("Error uploading images::", error);
   }
 };
-const uploadImageFromLocalFiles = async ({ files, folderName, shopId }) => {
+const uploadImageFromLocalFiles = async ({ files }) => {
   try {
     if (!files.length) {
       return;
     }
-    const uploadedUrls = [];
-    for (const file of files) {
-      const result = await cloudinary.uploader.upload(file.path, {
-        folder: folderName,
-      });
-      uploadedUrls.push({
-        image_url: result.secure_url,
-        shopId: shopId,
-        thumb_url: await cloudinary.url(result.public_id, {
-          height: 100,
-          width: 100,
-          format: "jpg",
-        }),
-      });
-    }
+    const uploadPromises = files.map((file) =>
+      cloudinary.uploader
+        .upload(file.path, { folder: "images" })
+        .then((result) => {
+          // Lấy thumbnail cho ảnh
+          const thumb_url = cloudinary.url(result.public_id, {
+            height: 100,
+            width: 100,
+            format: "jpg",
+          });
+
+          // Trả về object chứa URL ảnh và thumbnail
+          return {
+            image_url: result.secure_url,
+            thumb_url: thumb_url,
+          };
+        })
+    );
+
+    // Chờ tất cả các promises hoàn thành
+    const uploadedUrls = await Promise.all(uploadPromises);
     return uploadedUrls;
   } catch (error) {
     console.error("Error uploading images::", error);

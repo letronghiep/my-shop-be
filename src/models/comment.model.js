@@ -33,6 +33,13 @@ var commentSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    comment_rating: {
+      type: Number,
+      default: 0,
+      min: 1,
+      max: 5,
+      required: true,
+    },
   },
   {
     timestamps: true,

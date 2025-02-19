@@ -1,5 +1,6 @@
 "use strict";
 const { model, Schema, Types } = require("mongoose");
+const { default: slugify } = require("slugify");
 
 const DOCUMENT_NAME = "Category";
 
@@ -16,27 +17,20 @@ var categorySchema = new Schema(
       type: String,
       default: "",
     },
+    category_thumb: {
+      type: String,
+      default: "",
+    },
     slug: {
       type: String,
       default: "",
     },
-    category_left: {
-      type: Number,
-      default: 0,
-    },
-    category_right: {
-      type: Number,
-      default: 0,
-    },
     category_parentId: {
-      type: Types.ObjectId,
-      ref: DOCUMENT_NAME,
+      type: Number,
+      default: 0,
     },
-    category_feature: {
-      type: Boolean,
-      default: false,
-    },
-    isDeleted: {
+    children: [this],
+    has_children: {
       type: Boolean,
       default: false,
     },
@@ -50,7 +44,7 @@ var categorySchema = new Schema(
 categorySchema.index({ category_name: "text" });
 
 categorySchema.pre("save", function (next) {
-  this.slug = slugify(this.name, { lower: true });
+  this.slug = slugify(this.category_name, { lower: true });
 
   next();
 });

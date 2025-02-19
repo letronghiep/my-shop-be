@@ -5,7 +5,6 @@ const {
   createProductByShop,
   createProductByAdmin,
   getAllProduct,
-  getAllPublishedProduct,
   draftProductByAdmin,
   deleteProductByAdmin,
   blockProductByShop,
@@ -16,7 +15,7 @@ const {
   getListProductByShop,
   searchProduct,
   findOneSku,
-  getAllDraftProducts,
+  getInfoProduct,
 } = require("../../controllers/product.controller");
 const { authentication } = require("../../middlewares/authentication");
 const { grantAccess } = require("../../middlewares/rbac.middleware");
@@ -27,10 +26,12 @@ router.get("", asyncHandler(getAllProduct));
 router.get("/search", asyncHandler(searchProduct));
 router.get("/seller", authentication, asyncHandler(getListProductByShop));
 router.get("/:product_id", asyncHandler(getProductById));
+router.get('/info/:product_slug', asyncHandler(getInfoProduct))
 router.get("/sku/select_variant", asyncHandler(findOneSku));
 // shop
 router.post(
   "/seller",
+  authentication,
   grantAccess("createOwn", "product"),
   asyncHandler(createProductByShop)
 );
@@ -41,16 +42,6 @@ router.patch(
   asyncHandler(updateProductByShop)
 );
 
-router.get(
-  "/seller/published",
-  grantAccess("readOwn", "product"),
-  asyncHandler(getAllPublishedProduct)
-);
-router.get(
-  "/seller/draft",
-  grantAccess("readOwn", "product"),
-  asyncHandler(getAllDraftProducts)
-);
 router.post(
   "/seller/block/:product_id",
   grantAccess("updateOwn", "product"),

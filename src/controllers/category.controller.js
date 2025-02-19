@@ -15,7 +15,9 @@ const createCategory = async (req, res, next) => {
 const getCategoryByParentId = async (req, res, next) => {
   new SuccessResponse({
     message: "List Category",
-    metadata: await getCategoryByParentIdService(req.query),
+    metadata: await getCategoryByParentIdService({
+      category_parentId: req.query.category_parentId
+    }),
   }).send(res);
 };
 const deleteCategory = async (req, res, next) => {

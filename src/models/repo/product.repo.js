@@ -5,7 +5,11 @@ const Product = require("../product.model");
 const getProductById = async ({ productId }) => {
   return await Product.findOne({
     _id: new Types.ObjectId(productId),
-    isPublished: true,
+  }).lean();
+};
+const getProductBySlug = async ({ productSlug }) => {
+  return await Product.findOne({
+    product_slug: productSlug,
   }).lean();
 };
 
@@ -62,4 +66,5 @@ module.exports = {
   findAllProduct,
   checkProductByServer,
   updateStatusProduct,
+  getProductBySlug
 };

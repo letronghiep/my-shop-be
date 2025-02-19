@@ -4,6 +4,8 @@ const { paginate } = require("../helpers/paginate");
 const Product = require("../models/product.model");
 const User = require("../models/user.model");
 const Sku = require("../models/sku.model");
+const Category = require("../models/category.model");
+const Attribute = require("../models/attribute.model");
 const {
   insertInventory,
   updateInventory,
@@ -15,6 +17,7 @@ const {
   foundProductByShop,
   getProductById,
   updateStatusProduct,
+  getProductBySlug,
 } = require("../models/repo/product.repo");
 const { getDetailUser } = require("../models/repo/user.repo");
 const { getIO } = require("../db/init.socket");
@@ -38,6 +41,7 @@ const io = getIO();
 
 const createProductService = async ({
   product_name,
+  product_brand,
   product_thumb,
   product_images,
   product_description,
@@ -48,7 +52,9 @@ const createProductService = async ({
   product_attributes,
   product_ratingAvg,
   product_variations,
+  product_status,
   sku_list = [],
+  product_models,
 }) => {
   // 1. check shop exists or active
   const foundShop = await findShopById({
@@ -68,8 +74,11 @@ const createProductService = async ({
     product_quantity,
     product_shop,
     product_attributes,
+    product_brand,
     product_ratingAvg,
+    product_status,
     product_variations,
+    product_models,
   });
   if (product && sku_list.length) {
     createSkuService({
@@ -89,7 +98,7 @@ const createProductService = async ({
     location: "",
     stock: product.product_quantity,
   });
-  // product.product_quantity = await Product.
+  // // product.product_quantity = await Product.
   const notify_content = `Người dùng <a>${product.product_shop}</a> vừa thêm một sản phẩm <a>${product._id}</a> vào giỏ hàng `;
   const notification = await pushNotifyToSystem({
     notify_content: notify_content,
@@ -101,11 +110,11 @@ const createProductService = async ({
     },
     receiverId: product.product_shop,
   });
-  io.emit("productCreated", {
-    message: notify_content,
-    createdAt: notification.createdAt,
-    // metadata: product,
-  });
+  // io.emit("productCreated", {
+  //   message: notify_content,
+  //   createdAt: notification.createdAt,
+  //   // metadata: product,
+  // });
   return product;
 };
 
@@ -161,6 +170,7 @@ const updateProductService = async ({
   product_ratingAvg,
   product_variations,
   sku_list,
+  product_models,
 }) => {
   // check exists product
   const foundProduct = await foundProductByShop({
@@ -188,6 +198,7 @@ const updateProductService = async ({
     product_ratingAvg,
     product_variations,
     sku_list,
+    product_models,
   };
   await updateSkuService({ product_id: product_id, sku_list: sku_list });
 
@@ -245,7 +256,7 @@ const addToWishListService = async ({ userId, product_id }) => {
 // QUERY
 // get all product for user
 const getAllProductService = async ({
-  filter = { isPublished: true },
+  filter = { product_status: "published" },
   limit = 50,
   sort = "ctime",
   page = 1,
@@ -304,7 +315,15 @@ const getDetailProductService = async ({ product_id }) => {
 };
 
 // search
-const searchProductService = async ({ q, product_status }) => {
+const searchProductService = async ({
+  q,
+  product_status,
+  product_category,
+  limit = 50,
+  sort = "ctime",
+  currentPage = 1,
+  ...query
+}) => {
   const searchText = q
     ? {
         $or: [
@@ -318,10 +337,80 @@ const searchProductService = async ({ q, product_status }) => {
     filter: {
       ...searchText,
       ...(product_status && { product_status }),
+      ...(product_category && {
+        product_category: { $in: [Number(product_category)] },
+        ...query,
+      }),
     },
+    populate: ["product_shop"],
+    limit,
+    page: currentPage,
+    sort,
     // sort: { score: { $meta: "textScore" } },
   });
   return result;
+};
+
+// get info product
+const getInfoProductService = async ({ product_slug }) => {
+  const foundProduct = await getProductBySlug({
+    productSlug: product_slug,
+  });
+  if (!foundProduct) throw new NotFoundError("Không tìm thấy sản phẩm");
+  const category = await Category.find({
+    category_id: { $in: foundProduct.product_category },
+  });
+  function flattenCategories(categories) {
+    let flattedData = [];
+
+    categories.forEach((category) => {
+      flattedData.push({
+        category_id: category.category_id,
+        category_name: category.category_name,
+      });
+
+      // Nếu có children, tiếp tục gọi đệ quy
+      if (category.children && category.children.length > 0) {
+        flattedData = flattedData.concat(flattenCategories(category.children));
+      }
+    });
+    const result = flattedData.filter((data) =>
+      foundProduct.product_category.find(
+        (category) => category === data.category_id
+      )
+    );
+    return result;
+  }
+  const attribute = await Attribute.findOne({
+    category_id: { $in: foundProduct.product_category },
+  }).lean();
+  const attributeList = await attribute.attribute_list;
+  const product_attributes = foundProduct.product_attributes.reduce(
+    (acc, item) => {
+      const attribute = attributeList?.find(
+        (attr) => attr.attribute_id === item.attribute_id
+      );
+      if (attribute) {
+        const data = Array.isArray(item.value) ? item.value : [item.value];
+        acc[attribute?.display_name] = data
+          .map(
+            (i) =>
+              attribute.children.find((child) => child.value_id === i)
+                ?.display_name
+          )
+          .join(", ");
+      }
+      return acc;
+    },
+    {}
+  );
+  const productResult = {
+    ...foundProduct,
+    product_category: flattenCategories(category),
+    product_attributes,
+  };
+
+  return productResult;
 };
 // END QUERY
 module.exports = {
@@ -334,4 +423,5 @@ module.exports = {
   getListProductByShopService,
   getDetailProductService,
   searchProductService,
+  getInfoProductService,
 };

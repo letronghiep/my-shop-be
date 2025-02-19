@@ -14,46 +14,65 @@ const createCategoryService = async ({
     category_thumb,
     category_parentId,
   });
-  let rightValue;
   if (category_parentId) {
-    const parentCategory = await Category.findById(category_parentId);
+    const parentCategory = await Category.findOne({
+      category_id: category_parentId,
+    }).lean();
     if (!parentCategory) {
       throw new Error("Không tìm thấy danh mục");
     }
-    rightValue = parentCategory.category_right;
-    await Category.updateMany(
+    // rightValue = parentCategory.category_right;
+    // const children = parentCategory.children
+    await Category.findOneAndUpdate(
       {
-        category_right: { $gte: rightValue },
+        category_id: category_parentId,
       },
       {
-        $inc: { category_right: 2 },
-      }
-    );
-    await Category.updateMany(
-      {
-        category_left: { $gt: rightValue },
+        $push: {
+          children: category,
+        },
+        $set: {
+          has_children: true,
+        },
       },
       {
-        $inc: { category_left: 2 },
+        // new: true,
+        upsert: true,
       }
     );
+    // await Category.updateMany(
+    //   {
+    //     category_right: { $gte: rightValue },
+    //   },
+    //   {
+    //     $inc: { category_right: 2 },
+    //   }
+    // );
+    // await Category.updateMany(
+    //   {
+    //     category_left: { $gt: rightValue },
+    //   },
+    //   {
+    //     $inc: { category_left: 2 },
+    //   }
+    // );
   } else {
-    const maxRightValue = await Category.findOne(
-      {},
-      {},
-      {
-        sort: { category_right: -1 },
-      }
-    );
-    if (maxRightValue) {
-      rightValue = maxRightValue.category_right + 1;
-    } else {
-      rightValue = 1;
-    }
+    //   const maxRightValue = await Category.findOne(
+    //     {},
+    //     {},
+    //     {
+    //       sort: { category_right: -1 },
+    //     }
+    //   );
+    //   if (maxRightValue) {
+    //     rightValue = maxRightValue.category_right + 1;
+    //   } else {
+    //     rightValue = 1;
+    //   }
+    await category.save();
   }
-  category.category_left = rightValue;
-  category.category_right = rightValue + 1;
-  await category.save();
+  // category.category_left = rightValue;
+  // category.category_right = rightValue + 1;
   return category;
 };
 
@@ -63,35 +82,36 @@ const getCategoryByParentIdService = async ({
   limit = 50,
   offset = 0,
 }) => {
-  if (category_parentId) {
-    const parent = await Category.findById(category_parentId);
-    if (!parent) throw new NotFoundError("Không tìm thấy danh mục");
-    const categories = await Category.find({
-      category_left: { $gt: parent.category_left },
-      category_right: { $lte: parent.category_right },
-    })
-      .select({
-        category_left: 1,
-        category_right: 1,
-        category_name: 1,
-        category_thumb: 1,
-      })
-      .sort({
-        category_left: 1,
-      });
-    return categories;
-  }
-  const categories = await Category.find({
-    category_parentId,
-  })
-    .select({
-      category_left: 1,
-      category_right: 1,
-      category_name: 1,
-      category_thumb: 1,
-    })
+  // if (category_parentId) {
+  //   const parent = await Category.findById(category_parentId);
+  //   if (!parent) throw new NotFoundError("Không tìm thấy danh mục");
+  //   const categories = await Category.find({
+  //     category_left: { $gt: parent.category_left },
+  //     category_right: { $lte: parent.category_right },
+  //   })
+  //     .select({
+  //       category_left: 1,
+  //       category_right: 1,
+  //       category_name: 1,
+  //       category_thumb: 1,
+  //     })
+  //     .sort({
+  //       category_left: 1,
+  //     });
+  //   return categories;
+  // }
+  const categories = await Category.find({})
+    .populate(["children"])
+    // .select({
+    //   category_left: 1,
+    //   category_right: 1,
+    //   category_name: 1,
+    //   category_thumb: 1,
+    //   category_id: 1,
+    //   category_parentId: 1,
+    // })
     .sort({
-      category_left: 1,
+      createdAt: 1,
     });
   return categories;
 };

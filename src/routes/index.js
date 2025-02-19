@@ -19,4 +19,7 @@ router.use("/v1/api/shipping", require("./shipping"));
 router.use("/v1/api/pageview", require("./pageview"));
 router.use("/v1/api/analysis", require("./analysis"));
 router.use("/v1/api/shipment", require("./shipment"));
+router.use("/v1/api/variations", require("./variations"));
+router.use("/v1/api/brands", require("./brands"));
+router.use("/v1/api/attributes", require("./attributes"));
 module.exports = router;

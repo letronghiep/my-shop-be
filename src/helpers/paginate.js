@@ -3,7 +3,7 @@ const { getSelectData } = require("../utils/index");
 const paginate = async ({
   model,
   filter,
-  page,
+  page=1,
   limit = 50,
   select,
   sort,
@@ -14,7 +14,6 @@ const paginate = async ({
     const sortBy = sort === "ctime" ? { createdAt: -1 } : { createdAt: 1 };
     const totalRows = await model.countDocuments(filter);
     const totalPages = Math.ceil(totalRows / limit);
-    console.log(filter);
     const data = await model
       .find(filter)
       .sort(sortBy)

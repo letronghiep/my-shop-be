@@ -10,6 +10,7 @@ const {
   getListProductByShopService,
   searchProductService,
   updateProductStatusService,
+  getInfoProductService,
 } = require("../services/product.service");
 const { getSingleSkuService } = require("../services/sku.service");
 // user
@@ -35,7 +36,7 @@ const getListProductByShop = async (req, res, next) => {
     metadata: await getListProductByShopService({
       product_shop: req.user.userId,
       q: req.query.q,
-      product_status: req.query.product_status,
+      product_status: req.query.product_status || "all",
     }),
   }).send(res);
 };
@@ -45,6 +46,10 @@ const searchProduct = async (req, res, next) => {
     metadata: await searchProductService({
       q: req.query.q,
       product_status: req.query.product_status,
+      product_category: req.query.product_category,
+      limit: req.query.offset,
+      currentPage: req.query.page,
+      sort: req.query.sort_by,
     }),
   }).send(res);
 };
@@ -172,14 +177,13 @@ const getAllPublishedProduct = async (req, res, next) => {
   }).send(res);
 };
 
-const getAllDraftProducts = async (req, res, next) => {
-  const { userId } = req.user;
-
-  const products = await getAllDraftProductsService({ userId });
-
+// get info product
+const getInfoProduct = async (req, res, next) => {
   new SuccessResponse({
-    message: "List draft products",
-    metadata: products,
+    message: "Product information",
+    metadata: await getInfoProductService({
+      product_slug: req.params.product_slug,
+    }),
   }).send(res);
 };
 /**
@@ -214,7 +218,7 @@ module.exports = {
   draftProductByShop,
   blockProductByShop,
   deleteProductByShop,
-
+  getInfoProduct,
   createProductByAdmin,
   updateStatusProductByAdmin,
   draftProductByAdmin,
@@ -222,7 +226,6 @@ module.exports = {
   deleteProductByAdmin,
   getAllProduct,
   getAllPublishedProduct,
-  getAllDraftProducts,
   getListProductByShop,
   getProductById,
   searchProduct,

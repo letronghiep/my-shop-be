@@ -25,7 +25,16 @@ const uploadImgFromLocal = async (req, res, next) => {
     }),
   }).send(res);
 };
+const uploadMultipleFile = async (req, res, next) => {
+  new SuccessResponse({
+    message: "Files uploaded successfully",
+    metadata: await uploadImageFromLocalFiles({
+      files: req.files,
+    }),
+  }).send(res);
+}
 module.exports = {
   uploadFile,
   uploadImgFromLocal,
+  uploadMultipleFile
 };

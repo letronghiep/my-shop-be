@@ -20,7 +20,10 @@ const createComment = async (req, res, next) => {
 const getCommentByParentId = async (req, res, next) => {
   new SuccessResponse({
     message: "comments",
-    metadata: await getCommentByParentIdService(req.query),
+    metadata: await getCommentByParentIdService({
+      parentId: req.query.parent_id,
+      productId: req.query.productId,
+    }),
   }).send(res);
 };
 
