@@ -11,7 +11,11 @@ const {
   searchProductService,
   updateProductStatusService,
   getInfoProductService,
+  updateProductFavoriteService,
 } = require("../services/product.service");
+const {
+  getRelatedProductsService,
+} = require("../services/related-product.service");
 const { getSingleSkuService } = require("../services/sku.service");
 // user
 const getAllProduct = async (req, res, next) => {
@@ -50,6 +54,14 @@ const searchProduct = async (req, res, next) => {
       limit: req.query.offset,
       currentPage: req.query.page,
       sort: req.query.sort_by,
+    }),
+  }).send(res);
+};
+const getRelatedProducts = async (req, res, next) => {
+  new SuccessResponse({
+    message: "Related products",
+    metadata: await getRelatedProductsService({
+      productId: req.params.product_id,
     }),
   }).send(res);
 };
@@ -147,7 +159,14 @@ const updateProductByShop = async (req, res, next) => {
     }),
   }).send(res);
 };
-
+const updateProductFavorite = async (req, res, next) => {
+  new SuccessResponse({
+    message: "update success",
+    metadata: await updateProductFavoriteService({
+      product_id: req.params.product_id,
+    }),
+  }).send(res);
+};
 const deleteProductByShop = async (req, res, next) => {
   new SuccessResponse({
     message: "deleted success",
@@ -230,4 +249,6 @@ module.exports = {
   getProductById,
   searchProduct,
   findOneSku,
+  getRelatedProducts,
+  updateProductFavorite
 };

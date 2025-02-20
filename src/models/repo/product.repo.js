@@ -60,11 +60,24 @@ const updateStatusProduct = async ({
     new: true,
   });
 };
+const updateFavoriteProduct = async ({ product_id }) => {
+  // check product exists
+  const foundProduct = await foundProductByShop({ product_id });
+  if (!foundProduct) throw new NotFoundError("Sản phẩm không tồn tại");
+  foundProduct.product_favorites += 1;
+  await Sku.updateMany({
+    product_id: product_id,
+  });
+  return await Product.findByIdAndUpdate(product_id, foundProduct, {
+    new: true,
+  });
+};
 module.exports = {
   getProductById,
   foundProductByShop,
   findAllProduct,
   checkProductByServer,
   updateStatusProduct,
-  getProductBySlug
+  getProductBySlug,
+  updateFavoriteProduct
 };

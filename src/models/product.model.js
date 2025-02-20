@@ -76,6 +76,10 @@ var productSchema = new Schema(
       enum: ["published", "draft", "blocked", "deleted"],
       default: "published",
     },
+    product_favorites: {
+      type: Number,
+      default: 0,
+    },
   },
   {
     timestamps: true,

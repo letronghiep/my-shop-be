@@ -6,6 +6,7 @@ const User = require("../models/user.model");
 const Sku = require("../models/sku.model");
 const Category = require("../models/category.model");
 const Attribute = require("../models/attribute.model");
+const Variation = require("../models/variation.model");
 const {
   insertInventory,
   updateInventory,
@@ -18,11 +19,13 @@ const {
   getProductById,
   updateStatusProduct,
   getProductBySlug,
+  updateFavoriteProduct,
 } = require("../models/repo/product.repo");
 const { getDetailUser } = require("../models/repo/user.repo");
 const { getIO } = require("../db/init.socket");
 const { pushNotifyToSystem } = require("./notification.service");
 const { Types } = require("mongoose");
+const { findAllDiscountSelect } = require("../models/repo/discount.repo");
 const io = getIO();
 /**
  * createProduct
@@ -129,6 +132,11 @@ const updateProductStatusService = async ({
     product_id,
     product_shop,
     product_status,
+  });
+};
+const updateProductFavoriteService = async ({ product_id }) => {
+  return await updateFavoriteProduct({
+    product_id,
   });
 };
 
@@ -404,10 +412,52 @@ const getInfoProductService = async ({ product_slug }) => {
     },
     {}
   );
+  const foundVariation = await Variation.findOne({
+    category_id: { $in: foundProduct.product_category },
+  }).lean();
+  const variations = foundProduct.product_variations.map(
+    (product_variation) => {
+      return foundVariation.tier_variation_list.find(
+        (variation) => variation.display_name === product_variation.name
+      ).group_list[0].value_list;
+    }
+  );
+  const product_variations = foundProduct.product_variations.map(
+    (product_variation) => {
+      const oldOptions = product_variation.options;
+      const options = oldOptions.map(
+        (option) =>
+          variations.flat().find((variation) => variation.value_id === option)
+            ?.value_name
+      );
+      return {
+        name: product_variation.name,
+        options,
+        images: product_variation.images,
+      };
+    }
+  );
+  const discounts = await findAllDiscountSelect({
+    filter: {
+      discount_shopId: foundProduct.product_shop,
+      discount_is_active: true,
+      $or: [
+        {
+          discount_applies_to: "all",
+        },
+        {
+          discount_applies_to: "specific",
+          discount_product_ids: { $in: [foundProduct._id.toString()] },
+        },
+      ],
+    },
+  });
   const productResult = {
     ...foundProduct,
     product_category: flattenCategories(category),
     product_attributes,
+    product_variations,
+    product_promotion: discounts,
   };
 
   return productResult;
@@ -424,4 +474,5 @@ module.exports = {
   getDetailProductService,
   searchProductService,
   getInfoProductService,
+  updateProductFavoriteService,
 };

@@ -177,7 +177,6 @@ const getOrderByUserService = async ({
 }) => {
   if (!userId) return null;
   const { order_status } = filter;
-  console.log(order_status);
   let status;
   switch (order_status) {
     case "pending":

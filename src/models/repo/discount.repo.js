@@ -2,7 +2,13 @@
 const { getUnSelectData, getSelectData } = require("../../utils");
 
 const Discount = require("../discount.model");
-const findAllDiscountSelect = async ({ filter, limit, sort, page, select }) => {
+const findAllDiscountSelect = async ({
+  filter,
+  limit = 10,
+  sort,
+  page = 1,
+  select,
+}) => {
   const sortBy = sort === "ctime" ? { _id: -1 } : { id: 1 };
   const skip = (page - 1) * limit;
   return await Discount.find(filter)
