@@ -25,8 +25,8 @@ const getAllDiscountCodes = async (req, res, next) => {
   new SuccessResponse({
     message: "discount amount",
     metadata: await getAllDiscountCodeByShopService({
+      shopId: req.user.userId,
       ...req.query,
-     
     }),
   }).send(res);
 };

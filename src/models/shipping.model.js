@@ -29,7 +29,7 @@ const shippingSchema = new Schema(
       type: String,
       default: "",
     },
-    state: {
+    ward: {
       type: String,
       default: "",
     },

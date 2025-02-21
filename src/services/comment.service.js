@@ -1,4 +1,5 @@
 "use strict";
+const { Types } = require("mongoose");
 const { NotFoundError } = require("../core/error.response");
 const Comment = require("../models/comment.model");
 const { getProductById } = require("../models/repo/product.repo");
@@ -73,7 +74,7 @@ const getCommentByParentIdService = async ({
     const parentComment = await Comment.findById(commentParentId);
     if (!parentComment) throw new NotFoundError("Không tìm thấy comment");
     const comments = await Comment.find({
-      comment_productId: productId,
+      comment_productId: new Types.ObjectId(productId),
       comment_left: { $gt: parentComment.comment_left },
       comment_right: { $lte: parentComment.comment_right },
     })

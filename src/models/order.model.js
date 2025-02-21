@@ -13,6 +13,11 @@ var orderSchema = new Schema(
       ref: "User",
       required: true,
     },
+    order_id: {
+      type: String,
+      required: true,
+      unique: true,
+    },
     order_checkout: {
       type: Object,
       default: {},
@@ -55,7 +60,14 @@ var orderSchema = new Schema(
     },
     order_status: {
       type: String,
-      enum: ["pending", "confirmed", "shipped", "cancelled", "delivered"],
+      enum: [
+        "pending",
+        "processing",
+        "shipped",
+        "cancelled",
+        "delivering",
+        "refunded",
+      ],
       default: "pending",
     },
   },

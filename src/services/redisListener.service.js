@@ -14,7 +14,7 @@ module.exports = {
     const handleEvent = async (event, message) => {
       try {
         const data = await JSON.parse(message);
-        const notifyContent = generateNotification(event, data);
+        const notifyContent = await generateNotification(event, data);
         await Notification.create({
           notify_type: event,
           notify_content: notifyContent,

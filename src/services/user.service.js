@@ -237,7 +237,6 @@ const getMeService = async ({ userId }) => {
     const keyStore = await KeyStore.findOne({
       user: userId,
     });
-    console.log(keyStore)
     const role = usr_role.rol_slug;
     const accessToken = JWT.sign(
       {
@@ -245,7 +244,10 @@ const getMeService = async ({ userId }) => {
         usr_name,
         role: role.rol_slug,
       },
-      keyStore.publicKey
+      keyStore.publicKey,
+      {
+        expiresIn: "3d",
+      }
     );
     return {
       user: foundUser,

@@ -24,6 +24,15 @@ const randomProductId = () => {
 const randomShippingId = () => {
   return Math.floor(Math.random() * 899999 + 100000);
 };
+function randomString() {
+  const characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  let result = '';
+  for (let i = 0; i < 5; i++) {
+    const randomIndex = Math.floor(Math.random() * characters.length);
+    result += characters[randomIndex];
+  }
+  return result.toUpperCase();
+}
 module.exports = {
   getInfoData,
   getSelectData,
@@ -32,5 +41,6 @@ module.exports = {
   randomUserId,
   randomCategoryId,
   randomProductId,
-  randomShippingId
+  randomShippingId,
+  randomString,
 };

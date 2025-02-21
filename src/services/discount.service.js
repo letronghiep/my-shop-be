@@ -135,12 +135,6 @@ const getAllDiscountCodeByShopService = async ({
     },
     limit: +limit,
     page: +page,
-    select: [
-      "discount_code",
-      "discount_name",
-      "discount_value",
-      "discount_max_value",
-    ],
   });
   return discounts;
 };

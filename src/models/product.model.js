@@ -16,11 +16,16 @@ var productSchema = new Schema(
       type: String,
       required: true,
     },
+    product_brand: { type: String, required: true },
     product_slug: {
       type: String,
       unique: true,
     },
     product_thumb: { type: String, required: true },
+    product_images: {
+      type: [String],
+      default: [],
+    },
     product_description: String,
     product_price: {
       type: Number,
@@ -34,13 +39,21 @@ var productSchema = new Schema(
       type: Number,
       required: true,
     },
+    product_sold: {
+      type: Number,
+      default: 0,
+    },
+    product_seller: {
+      type: Number,
+      default: this.product_price,
+    },
     product_shop: {
       type: Types.ObjectId,
       ref: "Shop",
     },
     product_attributes: {
-      type: Schema.Types.Mixed,
-      required: true,
+      type: Array,
+      default: [],
     },
     product_rattingAvg: {
       type: Number,
@@ -54,25 +67,22 @@ var productSchema = new Schema(
       type: Array,
       default: [],
     },
-    isDraft: {
-      type: Boolean,
-      default: true,
-      index: true,
-      select: false,
+    product_models: {
+      type: Array,
+      default: [],
     },
-    isPublished: {
-      type: Boolean,
-      default: false,
-      index: true,
-      select: false,
+    product_status: {
+      type: String,
+      enum: ["published", "draft", "blocked", "deleted"],
+      default: "published",
     },
-    isBlocked: {
-      type: Boolean,
-      default: false,
+    product_favorites: {
+      type: Number,
+      default: 0,
     },
   },
   {
-    timestamp: true,
+    timestamps: true,
     collection: COLLECTION_NAME,
   }
 );

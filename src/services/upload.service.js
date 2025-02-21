@@ -1,5 +1,6 @@
 "use strict";
 const cloudinary = require("../configs/cloudinary.config");
+const { removeFileFromDirectory } = require("../helpers/removeFile");
 const uploadImageFromUrl = async ({ url, folderName, shopId, fileName }) => {
   try {
     const result = await cloudinary.uploader.upload(url, {
@@ -39,27 +40,59 @@ const uploadImageFromLocal = async ({ path, folderName, shopId }) => {
     console.log("Error upload", error);
   }
 };
-
-const uploadImageFromLocalFiles = async ({ files, folderName, shopId }) => {
+const uploadImageFromLocalFile = async ({ file }) => {
   try {
-    if (!files.length) {
+    if (!file) {
+      console.log("Error");
       return;
     }
-    const uploadedUrls = [];
-    for (const file of files) {
-      const result = await cloudinary.uploader.upload(file.path, {
-        folder: folderName,
-      });
-      uploadedUrls.push({
+    const result = await cloudinary.uploader.upload(file.path, {
+      folder: "images",
+    });
+    if (result) {
+      const uploadedUrl = {
         image_url: result.secure_url,
-        shopId: shopId,
+        // shopId: shopId,
         thumb_url: await cloudinary.url(result.public_id, {
           height: 100,
           width: 100,
           format: "jpg",
         }),
-      });
+      };
+      const pathName = `./src/uploads`;
+      await removeFileFromDirectory(pathName);
+      return uploadedUrl;
+    } else return null;
+  } catch (error) {
+    console.error("Error uploading images::", error);
+  }
+};
+const uploadImageFromLocalFiles = async ({ files }) => {
+  try {
+    if (!files.length) {
+      return;
     }
+    const uploadPromises = files.map((file) =>
+      cloudinary.uploader
+        .upload(file.path, { folder: "images" })
+        .then((result) => {
+          // Lấy thumbnail cho ảnh
+          const thumb_url = cloudinary.url(result.public_id, {
+            height: 100,
+            width: 100,
+            format: "jpg",
+          });
+
+          // Trả về object chứa URL ảnh và thumbnail
+          return {
+            image_url: result.secure_url,
+            thumb_url: thumb_url,
+          };
+        })
+    );
+
+    // Chờ tất cả các promises hoàn thành
+    const uploadedUrls = await Promise.all(uploadPromises);
     return uploadedUrls;
   } catch (error) {
     console.error("Error uploading images::", error);
@@ -68,5 +101,6 @@ const uploadImageFromLocalFiles = async ({ files, folderName, shopId }) => {
 module.exports = {
   uploadImageFromUrl,
   uploadImageFromLocal,
+  uploadImageFromLocalFile,
   uploadImageFromLocalFiles,
 };

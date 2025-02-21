@@ -1,10 +1,15 @@
 "use strict";
+const { Types } = require("mongoose");
 const { getSelectData } = require("../../utils");
 const Product = require("../product.model");
 const getProductById = async ({ productId }) => {
   return await Product.findOne({
-    _id: productId,
-    isPublished: true,
+    _id: new Types.ObjectId(productId),
+  }).lean();
+};
+const getProductBySlug = async ({ productSlug }) => {
+  return await Product.findOne({
+    product_slug: productSlug,
   }).lean();
 };
 
@@ -42,15 +47,24 @@ const checkProductByServer = async (products) => {
 const updateStatusProduct = async ({
   product_id,
   product_shop,
-  isDraft,
-  isPublished,
+  product_status,
 }) => {
   // check product exists
   const foundProduct = await foundProductByShop({ product_id, product_shop });
   if (!foundProduct) throw new NotFoundError("Sản phẩm không tồn tại");
-  // update product
-  foundProduct.isDraft = isDraft;
-  foundProduct.isPublished = isPublished;
+  foundProduct.product_status = product_status;
+  await Sku.updateMany({
+    product_id: product_id,
+  });
+  return await Product.findByIdAndUpdate(product_id, foundProduct, {
+    new: true,
+  });
+};
+const updateFavoriteProduct = async ({ product_id }) => {
+  // check product exists
+  const foundProduct = await foundProductByShop({ product_id });
+  if (!foundProduct) throw new NotFoundError("Sản phẩm không tồn tại");
+  foundProduct.product_favorites += 1;
   await Sku.updateMany({
     product_id: product_id,
   });
@@ -64,4 +78,6 @@ module.exports = {
   findAllProduct,
   checkProductByServer,
   updateStatusProduct,
+  getProductBySlug,
+  updateFavoriteProduct
 };

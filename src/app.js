@@ -17,13 +17,9 @@ const server = http.createServer(app);
 app.use(morgan("dev"));
 app.use(helmet());
 app.use(compression());
-app.use(express.json());
+app.use(express.json({ limit: "50mb" })); // Tăng giới hạn cho JSON payload
+app.use(express.urlencoded({ limit: "50mb", extended: true })); // Tăng giới 
 app.use(cookieParser());
-app.use(
-  express.urlencoded({
-    extended: true,
-  })
-);
 app.use(credentials);
 app.use(cors(corsOptions));
 // init db

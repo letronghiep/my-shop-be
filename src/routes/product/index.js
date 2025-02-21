@@ -5,10 +5,6 @@ const {
   createProductByShop,
   createProductByAdmin,
   getAllProduct,
-  getAllPublishedProduct,
-  publishedProductByShop,
-  publishedProductByAdmin,
-  draftProductByShop,
   draftProductByAdmin,
   deleteProductByAdmin,
   blockProductByShop,
@@ -19,7 +15,9 @@ const {
   getListProductByShop,
   searchProduct,
   findOneSku,
-  getAllDraftProducts,
+  getInfoProduct,
+  getRelatedProducts,
+  updateProductFavorite,
 } = require("../../controllers/product.controller");
 const { authentication } = require("../../middlewares/authentication");
 const { grantAccess } = require("../../middlewares/rbac.middleware");
@@ -27,14 +25,16 @@ const router = express.Router();
 // user
 
 router.get("", asyncHandler(getAllProduct));
-router.get("/shop/:product_shop", asyncHandler(getListProductByShop));
 router.get("/search", asyncHandler(searchProduct));
+router.get("/seller", authentication, asyncHandler(getListProductByShop));
 router.get("/:product_id", asyncHandler(getProductById));
+router.get("/info/:product_slug", asyncHandler(getInfoProduct));
 router.get("/sku/select_variant", asyncHandler(findOneSku));
-router.use(authentication);
+router.get("/related/:product_id", asyncHandler(getRelatedProducts));
 // shop
 router.post(
   "/seller",
+  authentication,
   grantAccess("createOwn", "product"),
   asyncHandler(createProductByShop)
 );
@@ -44,27 +44,8 @@ router.patch(
   grantAccess("updateOwn", "product"),
   asyncHandler(updateProductByShop)
 );
+router.patch("/favorite/:product_id", asyncHandler(updateProductFavorite));
 
-router.get(
-  "/seller/published",
-  grantAccess("readOwn", "product"),
-  asyncHandler(getAllPublishedProduct)
-);
-router.get(
-  "/seller/draft",
-  grantAccess("readOwn", "product"),
-  asyncHandler(getAllDraftProducts)
-);
-router.post(
-  "/seller/published/:product_id",
-  grantAccess("updateOwn", "product"),
-  asyncHandler(publishedProductByShop)
-);
-router.post(
-  "/seller/draft/:product_id",
-  grantAccess("updateOwn", "product"),
-  asyncHandler(draftProductByShop)
-);
 router.post(
   "/seller/block/:product_id",
   grantAccess("updateOwn", "product"),
@@ -80,11 +61,6 @@ router.post(
   "/admin",
   grantAccess("createAny", "product"),
   asyncHandler(createProductByAdmin)
-);
-router.post(
-  "/admin/published",
-  grantAccess("updateAny", "product"),
-  asyncHandler(publishedProductByAdmin)
 );
 router.post(
   "/admin/draft",

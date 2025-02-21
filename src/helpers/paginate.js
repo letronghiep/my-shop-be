@@ -3,8 +3,8 @@ const { getSelectData } = require("../utils/index");
 const paginate = async ({
   model,
   filter,
-  page,
-  limit=50,
+  page=1,
+  limit = 50,
   select,
   sort,
   populate,
@@ -21,7 +21,7 @@ const paginate = async ({
       .limit(limit)
       .select(getSelectData(select))
       .populate(populate)
-      .exec();
+      .lean();
     return {
       limit,
       currentPage: page,

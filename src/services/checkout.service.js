@@ -8,6 +8,8 @@ const { getDiscountAmount } = require("../controllers/discount.controller");
 const { acquireLock, releaseLock } = require("../services/redis.service");
 const { deleteUserCartService } = require("./cart.service");
 const { producer } = require("./rabbitMQ.service");
+const { getOrderByUserList } = require("../models/repo/checkout.repo");
+const { randomString } = require("../utils");
 /* 
     {
         cartId,
@@ -144,6 +146,7 @@ const orderByUserService = async ({
   }
   const newOrder = await Order.create({
     order_userId: userId,
+    order_id: randomString(),
     order_checkout: checkout_order,
     order_shipping: user_address,
     order_payment: user_payment,
@@ -165,11 +168,47 @@ const orderByUserService = async ({
 /*
  Query order
  */
-const getOrderByUserService = async ({ userId, limit = 20, skip = 0 }) => {
-  const query = {
-    order_userId: userId,
+const getOrderByUserService = async ({
+  userId,
+  limit = 50,
+  sort = "ctime",
+  page = 1,
+  filter = {},
+}) => {
+  if (!userId) return null;
+  const { order_status } = filter;
+  let status;
+  switch (order_status) {
+    case "pending":
+      status = "pending";
+      break;
+    case "canceled":
+      status = "canceled";
+      break;
+    case "delivered":
+      status = "delivered";
+      break;
+    case "confirmed":
+      status = "confirmed";
+      break;
+    case "shipped":
+      status = "shipped";
+      break;
+    default:
+      status = "";
+      break;
+  }
+  const filterStatus = status !== "" ? { order_status: status } : null;
+  const result = await getOrderByUserList({
+    limit,
+    sort,
+    page,
+    filter: { order_userId: userId, order_status: status },
+  });
+
+  return {
+    ...result,
   };
-  return await Order.find(query).skip(skip).limit(limit);
 };
 const getDetailOrderService = async ({ userId, orderId }) => {
   return await Order.findOne({

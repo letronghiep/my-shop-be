@@ -9,6 +9,7 @@ const dev = {
     password: process.env.DEV_DB_PASS,
   },
 };
+
 const pro = {
   app: {
     port: process.env.PRO_APP_PORT || 3056,

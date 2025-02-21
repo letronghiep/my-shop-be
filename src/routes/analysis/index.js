@@ -1,0 +1,10 @@
+"use strict";
+const express = require("express");
+const { asyncHandler } = require("../../helpers/asyncHandler");
+const { authentication } = require("../../middlewares/authentication");
+const { grantAccess } = require("../../middlewares/rbac.middleware");
+const { getAnalysisData } = require("../../controllers/analysis.controller");
+const router = express.Router();
+router.use(authentication);
+router.get("/seller", asyncHandler(getAnalysisData));
+module.exports = router;
